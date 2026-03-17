@@ -143,7 +143,7 @@ def confirmation_copy(language: str, action: str, low_literacy: bool) -> tuple[s
             return (
                 "YA",
                 "YA, ini transaksi saya.",
-                "Disahkan oleh pengguna. Transaksi boleh diteruskan.",
+                "Disahkan oleh pengguna. Transaksi akan diteruskan.",
             )
         return (
             "YES",
@@ -559,6 +559,7 @@ def main() -> None:
     st.markdown(
         f"""
 <div class='hero'>
+  <div class='eyebrow'>Team Cache Me</div>
   <h1 class='hero-title'>PocketSignal</h1>
   <div class='hero-copy'>
     Privacy-first fraud triage for digital wallets serving unbanked and low-confidence users.

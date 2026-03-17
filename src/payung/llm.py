@@ -40,11 +40,11 @@ def fallback_flag_message(
     normalized = normalize_language(language)
     if normalized == "bahasa_melayu":
         if low_literacy:
-            return "Kami nampak transaksi luar biasa. Adakah ini anda? Balas YA atau TIDAK."
-        transaction_text = "transaksi ini" if transaction_amt is None else f"transaksi RM{transaction_amt:.2f} ini"
+            return "Kami nampak transaksi luar biasa. Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK."
+        transaction_text = "transaksi ini" if transaction_amt is None else f"transaksi RM{transaction_amt:.2f}"
         return (
-            f"Kami mengesan aktiviti luar biasa pada {transaction_text}. "
-            "Adakah anda yang melakukan transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat."
+            f"Kami mengesan {transaction_text} yang luar biasa. "
+            "Adakah anda yang membuat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat."
         )
     if low_literacy:
         return "We saw an unusual payment. Did you make it? Reply YES or NO."

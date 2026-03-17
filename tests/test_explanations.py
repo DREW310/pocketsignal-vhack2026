@@ -43,7 +43,7 @@ class ExplanationTests(unittest.TestCase):
         )
         self.assertEqual(
             fallback_flag_message("Bahasa Melayu", 39.0, low_literacy=True),
-            "Kami nampak transaksi luar biasa. Adakah ini anda? Balas YA atau TIDAK.",
+            "Kami nampak transaksi luar biasa. Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK.",
         )
         self.assertTrue(parse_low_literacy(True))
         self.assertTrue(parse_low_literacy("YES"))
@@ -90,7 +90,7 @@ class ExplanationTests(unittest.TestCase):
         client = DummyClient()
         self.assertEqual(
             client.explain_flag(100.0, ["unusual amount pattern"], language="Bahasa Melayu", low_literacy=False),
-            "Kami mengesan aktiviti luar biasa pada transaksi RM100.00 ini. Adakah anda yang melakukan transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat.",
+            "Kami mengesan transaksi RM100.00 yang luar biasa. Adakah anda yang membuat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat.",
         )
         self.assertEqual(
             client.explain_flag(100.0, ["unusual amount pattern"], language="English", low_literacy=True),
