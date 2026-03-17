@@ -1,10 +1,10 @@
 # PocketSignal
 
-PocketSignal is the product built by team Cache Me for V-HACK 2026 Case Study 2 (Digital Trust - Real-Time Fraud Shield for the Unbanked).
+PocketSignal is the product built by Team Cache Me for V-HACK 2026 Case Study 2 (Digital Trust - Real-Time Fraud Shield for the Unbanked).
 
 ## Why this repo exists
-- Build a complete, free-to-run fraud pipeline with reproducible evidence.
-- Cover both Preliminary and Final round rubric requirements in one repository.
+- Build a complete, free-to-run fraud triage pipeline with reproducible evidence.
+- Demonstrate a working prototype with calibrated `Approve / Flag / Block` routing.
 - Keep all sensitive data local (no OpenAI API usage).
 
 ## Tech stack (all free)
@@ -26,41 +26,53 @@ PocketSignal is the product built by team Cache Me for V-HACK 2026 Case Study 2 
 - `scripts/run_ablation.py`: ablation (graph / imbalance / ensemble)
 - `scripts/load_test.py`: latency testing for Gate C
 - `reports/`: generated technical reports
-- `docs/`: rubric mapping, case compliance, business and pitch assets
+- `docs/`: case-study alignment, privacy notes, and business context
 
-## What belongs in the public repo
-- Keep the source code, docs, markdown reports, and config files.
-- Keep `artifacts/model_bundle.pkl` in the repo so judges can run the API and dashboard without retraining.
-- Keep `reports/metrics.json` and `reports/demo_cases.json` in the repo because the dashboard reads them for the hero metrics and exact demo path.
-- Do not commit Kaggle raw CSV files into a public GitHub repo.
-- Do not commit cache folders such as `__pycache__/`, `.DS_Store`, or `catboost_info/`.
-- Commit download instructions for IEEE-CIS instead of redistributing the raw competition files.
-- For the exact include / exclude list, see `docs/public_repo_manifest.md`.
+## Included reproducibility artifacts
+- `artifacts/model_bundle.pkl` lets judges and teammates run the API and dashboard without retraining first.
+- `reports/metrics.json` and `reports/demo_cases.json` feed the dashboard hero metrics and exact demo path.
+- `reports/latency_judge_demo.md` and `reports/latency_fast_route.md` document the two local recovery trade-offs.
 
-## Recommended screenshot set
-- Add 3 to 5 screenshots to the GitHub repo and the submission deck.
-- Use the capture plan in `docs/readme_screenshot_checklist.md`.
-- Recommended examples:
-  - product overview screen
-  - exact `Approve` case
-  - exact `Flag` case with recovery message
-  - exact `Block` case
-  - architecture diagram slide
+## Data access note
+- This public repository does not redistribute Kaggle raw CSV files.
+- Download the IEEE-CIS files into the project root before running preprocessing or retraining.
+- Cache folders such as `__pycache__/`, `.DS_Store`, and `catboost_info/` are intentionally excluded.
 
 ## Quick start
-1. Install dependencies:
+1. Install dependencies
+
+macOS / Linux:
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-2. Run preprocessing (sample mode):
+Windows PowerShell:
+```powershell
+py -3 -m pip install -r requirements.txt
+```
+
+2. Optional preprocessing run (sample mode)
+
+macOS / Linux:
 ```bash
 python3 scripts/preprocess.py --sample-frac 0.10
 ```
 
-3. Train and export model bundle:
+Windows PowerShell:
+```powershell
+py -3 scripts/preprocess.py --sample-frac 0.10
+```
+
+3. Train and export the model bundle
+
+macOS / Linux:
 ```bash
 python3 scripts/train.py --sample-frac 0.10
+```
+
+Windows PowerShell:
+```powershell
+py -3 scripts/train.py --sample-frac 0.10
 ```
 
 If your local environment has OpenMP runtime issues, use:
@@ -83,7 +95,20 @@ Or safe fallback mode:
 python3 scripts/run_ablation.py --sample-frac 0.05 --safe-mode
 ```
 
-5. Start FastAPI backend:
+5. Install and warm the local LLM (optional for richer wording mode)
+
+macOS / Windows:
+```bash
+ollama pull llama3
+```
+
+For a lighter richer-wording benchmark, Final-round candidates include:
+- `ollama pull llama3.2:1b`
+- `ollama pull qwen2.5:1.5b`
+
+6. Start FastAPI backend
+
+macOS / Linux:
 ```bash
 PYTHONPATH=src uvicorn apps.fastapi_app:app --host 0.0.0.0 --port 8000
 ```
@@ -101,22 +126,42 @@ POCKETSIGNAL_OLLAMA_TIMEOUT=8
 - `POCKETSIGNAL_OLLAMA_PRELOAD=1` attempts a best-effort warm preload on startup.
 - `POCKETSIGNAL_OLLAMA_TIMEOUT=8` is a more realistic demo-time timeout than the strict low default used in development.
 
-6. Start Streamlit dashboard:
+Windows PowerShell:
+```powershell
+$env:PYTHONPATH="src"
+$env:POCKETSIGNAL_OLLAMA_TIMEOUT="8"
+py -3 -m uvicorn apps.fastapi_app:app --host 0.0.0.0 --port 8000
+```
+
+7. Start Streamlit dashboard
+
+macOS / Linux:
 ```bash
 streamlit run apps/dashboard.py
 ```
 
-7. Run latency test (Gate C evidence):
+Windows PowerShell:
+```powershell
+py -3 -m streamlit run apps/dashboard.py
+```
+
+8. Run latency tests (evidence)
 ```bash
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile judge_demo --output reports/latency_judge_demo.md
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile fast_route --output reports/latency_fast_route.md
 ```
 
-8. Find demo-friendly transactions:
+9. Find demo-friendly transactions
 ```bash
 python3 scripts/find_demo_cases.py --sample-frac 0.02
 ```
 This writes `reports/demo_cases.json` with one candidate each for `Approve`, `Flag`, and `Block`.
+
+## Cross-platform demo note
+- Judges and teammates do not need to retrain the model to run the demo.
+- The public repo includes `artifacts/model_bundle.pkl`, `reports/metrics.json`, and `reports/demo_cases.json`.
+- That means a Windows teammate can install dependencies, start FastAPI and Streamlit, and run the same exact demo cases without redoing training first.
+- If Ollama is unavailable on a teammate laptop, the system can still demonstrate the `Flag` route by switching to the faster deterministic local wording path.
 
 ## API contract
 `POST /predict`
@@ -155,7 +200,7 @@ Example latency command using fast local template mode:
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile fast_route
 ```
 
-## Required evidence outputs
+## Key evidence files
 - `reports/metrics_report.md`
 - `reports/metrics.json`
 - `reports/leakage_check.md`
@@ -163,16 +208,5 @@ python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 
 - `reports/latency_judge_demo.md`
 - `reports/latency_fast_route.md`
 - `reports/latency_submission_summary.md`
-- `docs/rubric_matrix.md`
 - `docs/case_study2_compliance.md`
-
-## Anti-plagiarism evidence practices
-- Keep daily commits per member.
-- Keep timestamped experiment artifacts in `reports/`.
-- Maintain source references in `references.md`.
-- Demo full closed-loop flow: `Flag -> local LLM message -> user confirmation`.
-
-## Submission note
-- Preliminary submission does not require a public live deployment.
-- The required delivery is a working prototype, a public GitHub source-code repository, and the recorded video pitch.
-- For judge-facing stability, keep the working demo local and reproducible instead of adding a late external hosting dependency.
+- `docs/privacy_and_ethics.md`

@@ -24,6 +24,13 @@ reports/citic*
 reports/aip_template_text.txt
 reports/source_checks/
 reports/latency_report.md
+docs/anti_plagiarism_protocol.md
+docs/execution_checklist.md
+docs/final_upgrade_options.md
+docs/public_repo_manifest.md
+docs/readme_screenshot_checklist.md
+docs/rubric_matrix.md
+docs/pitch/
 
 # macOS
 .DS_Store
