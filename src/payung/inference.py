@@ -61,6 +61,14 @@ def friendly_feature_reason(feature: str) -> str:
     return "transaction behavior signal"
 
 
+def parse_low_literacy(value: Any) -> bool:
+    """Interpret UI and API low-literacy flags in a permissive but explicit way."""
+    if isinstance(value, bool):
+        return value
+    text = str(value or "").strip().lower()
+    return text in {"1", "true", "yes", "on"}
+
+
 class PayungPredictor:
     def __init__(self, bundle: Mapping[str, Any]) -> None:
         self.bundle = dict(bundle)
@@ -186,6 +194,7 @@ class PayungPredictor:
             explanation = self._default_explanation(status=status, top_features=top_features)
             language = normalize_language(payload.get("preferred_language"))
             response_profile = normalize_response_profile(payload.get("response_profile"))
+            low_literacy = parse_low_literacy(payload.get("low_literacy"))
 
             if status == "Flag" and llm_client is not None:
                 transaction_amt = payload.get("TransactionAmt")
@@ -196,12 +205,17 @@ class PayungPredictor:
                 # PocketSignal supports two local recovery strategies:
                 # a deterministic fast route and a richer local wording route.
                 if response_profile == "fast_route":
-                    explanation = fallback_flag_message(language=language, transaction_amt=transaction_amt)
+                    explanation = fallback_flag_message(
+                        language=language,
+                        transaction_amt=transaction_amt,
+                        low_literacy=low_literacy,
+                    )
                 else:
                     explanation = llm_client.explain_flag(
                         transaction_amt=transaction_amt,
                         top_features=top_features,
                         language=language,
+                        low_literacy=low_literacy,
                     )
             elif status == "Flag":
                 transaction_amt = payload.get("TransactionAmt")
@@ -209,7 +223,11 @@ class PayungPredictor:
                     transaction_amt = float(transaction_amt) if transaction_amt is not None else None
                 except (TypeError, ValueError):
                     transaction_amt = None
-                explanation = fallback_flag_message(language=language, transaction_amt=transaction_amt)
+                explanation = fallback_flag_message(
+                    language=language,
+                    transaction_amt=transaction_amt,
+                    low_literacy=low_literacy,
+                )
 
             results.append(
                 PredictionResult(

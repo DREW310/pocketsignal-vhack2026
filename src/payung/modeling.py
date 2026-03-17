@@ -334,6 +334,16 @@ def _block_share(risk_score: np.ndarray, block_threshold: int) -> float:
     return float(blocked.mean())
 
 
+def _block_precision(y_true: np.ndarray, risk_score: np.ndarray, block_threshold: int) -> float:
+    predicted_fraud = (risk_score > block_threshold).astype(int)
+    return float(precision_score(y_true, predicted_fraud, zero_division=0))
+
+
+def _block_recall(y_true: np.ndarray, risk_score: np.ndarray, block_threshold: int) -> float:
+    predicted_fraud = (risk_score > block_threshold).astype(int)
+    return float(recall_score(y_true, predicted_fraud, zero_division=0))
+
+
 def optimize_thresholds(
     y_true: np.ndarray,
     risk_score: np.ndarray,
@@ -344,19 +354,51 @@ def optimize_thresholds(
     min_approve_share: float,
     min_flag_share: float,
     min_block_share: float,
+    max_flag_share: float = 1.0,
+    target_approve_share: float | None = None,
+    target_flag_share: float | None = None,
+    target_block_share: float | None = None,
 ) -> dict[str, int]:
-    def candidate_score(approve_threshold: int, block_threshold: int) -> tuple[float, float, int]:
+    target_approve = float(target_approve_share if target_approve_share is not None else max(min_approve_share, 0.50))
+    target_flag = float(target_flag_share if target_flag_share is not None else min(max_flag_share, 0.35))
+    target_block = float(target_block_share if target_block_share is not None else max(min_block_share, 0.01))
+
+    def candidate_score(
+        approve_threshold: int,
+        block_threshold: int,
+        approve_share: float,
+        flag_share: float,
+        block_share: float,
+    ) -> tuple[float, float, float, float, float, float, float, int]:
         approve_rate = _approve_fraud_rate(y_true, risk_score, approve_threshold)
         predicted_fraud = (risk_score > block_threshold).astype(int)
         fpr = _false_positive_rate(y_true, predicted_fraud)
+        precision = _block_precision(y_true, risk_score, block_threshold)
+        recall = _block_recall(y_true, risk_score, block_threshold)
+        flag_overflow = max(0.0, flag_share - max_flag_share)
+        block_deficit = max(0.0, target_block - block_share)
+        share_distance = (
+            abs(approve_share - target_approve)
+            + abs(flag_share - target_flag)
+            + abs(block_share - target_block)
+        )
         distance = abs(approve_threshold - default_approve) + abs(block_threshold - default_block)
-        return (approve_rate + fpr, approve_rate, distance)
+        return (
+            max(0.0, approve_rate - target_approve_fraud_rate),
+            max(0.0, fpr - target_block_fpr),
+            flag_overflow,
+            block_deficit,
+            share_distance,
+            -precision,
+            -recall,
+            distance,
+        )
 
-    strict_candidates: list[tuple[tuple[float, float, int], int, int]] = []
-    relaxed_candidates: list[tuple[tuple[float, float, int], int, int]] = []
+    strict_candidates: list[tuple[tuple[float, float, float, float, float, float, float, int], int, int]] = []
+    relaxed_candidates: list[tuple[tuple[float, float, float, float, float, float, float, int], int, int]] = []
 
-    for approve_threshold in range(0, int(default_approve) + 1):
-        for block_threshold in range(max(int(default_block), approve_threshold + 1), 101):
+    for approve_threshold in range(5, 91):
+        for block_threshold in range(approve_threshold + 1, 101):
             approve_share = _approve_share(risk_score, approve_threshold)
             flag_share = _flag_share(risk_score, approve_threshold, block_threshold)
             block_share = _block_share(risk_score, block_threshold)
@@ -370,14 +412,21 @@ def optimize_thresholds(
 
             predicted_fraud = (risk_score > block_threshold).astype(int)
             fpr = _false_positive_rate(y_true, predicted_fraud)
-            if fpr > target_block_fpr:
-                continue
-
-            score_tuple = candidate_score(approve_threshold, block_threshold)
+            approve_rate = _approve_fraud_rate(y_true, risk_score, approve_threshold)
+            score_tuple = candidate_score(
+                approve_threshold,
+                block_threshold,
+                approve_share=approve_share,
+                flag_share=flag_share,
+                block_share=block_share,
+            )
             relaxed_candidates.append((score_tuple, approve_threshold, block_threshold))
 
-            approve_rate = _approve_fraud_rate(y_true, risk_score, approve_threshold)
-            if approve_rate <= target_approve_fraud_rate:
+            if (
+                approve_rate <= target_approve_fraud_rate
+                and fpr <= target_block_fpr
+                and flag_share <= max_flag_share
+            ):
                 strict_candidates.append((score_tuple, approve_threshold, block_threshold))
 
     candidate_pool = strict_candidates or relaxed_candidates
@@ -582,6 +631,10 @@ def train_pipeline(
             min_approve_share=float(routing_cfg.get("min_approve_share", 0.20)),
             min_flag_share=float(routing_cfg.get("min_flag_share", 0.02)),
             min_block_share=float(routing_cfg.get("min_block_share", 0.002)),
+            max_flag_share=float(routing_cfg.get("max_flag_share", 1.0)),
+            target_approve_share=routing_cfg.get("target_approve_share"),
+            target_flag_share=routing_cfg.get("target_flag_share"),
+            target_block_share=routing_cfg.get("target_block_share"),
         )
         approve_threshold = optimized["approve_threshold"]
         block_threshold = optimized["block_threshold"]

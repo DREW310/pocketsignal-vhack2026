@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" fill="none">
+  <rect width="1200" height="640" fill="#07131D"/>
+  <rect x="40" y="40" width="1120" height="120" rx="28" fill="#0B1B26" stroke="#3A5060"/>
+  <text x="80" y="92" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="48" font-weight="700">PocketSignal</text>
+  <text x="80" y="138" fill="#BFC8D0" font-family="Avenir Next, Arial" font-size="24">Privacy-first fraud triage for wallet and QR payments</text>
+  <rect x="70" y="200" width="260" height="160" rx="22" fill="#102331" stroke="#20475E"/>
+  <text x="100" y="250" fill="#F5EFD8" font-family="Avenir Next, Arial" font-size="34" font-weight="700">Approve</text>
+  <text x="100" y="292" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">Low-risk fast path</text>
+  <text x="100" y="326" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">Minimal user friction</text>
+  <rect x="470" y="200" width="260" height="160" rx="22" fill="#102331" stroke="#8B6A00"/>
+  <text x="500" y="250" fill="#FFD54A" font-family="Avenir Next, Arial" font-size="34" font-weight="700">Flag</text>
+  <text x="500" y="292" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">Gray-zone recovery</text>
+  <text x="500" y="326" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">Local confirmation step</text>
+  <rect x="870" y="200" width="260" height="160" rx="22" fill="#102331" stroke="#7F1D1D"/>
+  <text x="900" y="250" fill="#FF6B5E" font-family="Avenir Next, Arial" font-size="34" font-weight="700">Block</text>
+  <text x="900" y="292" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">High-confidence fraud lane</text>
+  <text x="900" y="326" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">Immediate intervention</text>
+  <path d="M330 280H470" stroke="#6B7280" stroke-width="8" stroke-linecap="round"/>
+  <path d="M730 280H870" stroke="#6B7280" stroke-width="8" stroke-linecap="round"/>
+  <rect x="290" y="430" width="620" height="150" rx="24" fill="#0B1B26" stroke="#3A5060"/>
+  <text x="330" y="485" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="30" font-weight="700">Why judges should care</text>
+  <text x="330" y="525" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">PocketSignal does not only score fraud. It detects risk, chooses the intervention,</text>
+  <text x="330" y="555" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">and communicates clearly to preserve trust for wallet and QR users.</text>
+</svg>

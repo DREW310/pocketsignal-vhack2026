@@ -1,13 +1,14 @@
 # References
 
 1. IEEE-CIS Fraud Detection (Kaggle): https://www.kaggle.com/c/ieee-fraud-detection
-2. AI-Powered Fraud Detection in Digital Payments (ResearchGate, 2025): https://www.researchgate.net/publication/400508360_AI-Powered_Fraud_Detection_in_Digital_Payments
-3. Synthetic Financial Datasets For Fraud Detection (Kaggle): https://www.kaggle.com/datasets/ealaxi/paysim1
-4. Anti Money Laundering Transaction Data (SAML-D): https://www.kaggle.com/datasets/berkanoztas/synthetic-transaction-monitoring-dataset-aml
-5. LightGBM Documentation: https://lightgbm.readthedocs.io/
-6. FastAPI Documentation: https://fastapi.tiangolo.com/
-7. SHAP Documentation: https://shap.readthedocs.io/
-8. Ollama Documentation: https://ollama.com/
-9. Bangko Sentral ng Pilipinas, 2022 Financial Inclusion Survey highlights: https://www.bsp.gov.ph/
-10. World Bank, Global Findex Database: https://www.worldbank.org/en/publication/globalfindex
-11. World Bank, Small and Medium Enterprises (SMEs) Finance: https://www.worldbank.org/en/topic/smefinance
+2. LightGBM Documentation: https://lightgbm.readthedocs.io/
+3. FastAPI Documentation: https://fastapi.tiangolo.com/
+4. SHAP Documentation: https://shap.readthedocs.io/
+5. Ollama Documentation: https://ollama.com/
+6. Ollama API reference: https://github.com/ollama/ollama/blob/main/docs/api.md
+7. World Bank Global Findex microdata notes for Malaysia account ownership (91.4% in 2021): https://microdata.worldbank.org/index.php/catalog/4775/study-description
+8. PayNet on DuitNow QR merchant scale in Malaysia: https://www.paynet.my/news/over-2-9-million-merchants-now-accept-duitnow-qr-and-paynet-campaign-rewards-rm600000-to-users/
+9. Royal Malaysia Police scam alert on AI-generated voice fraud: https://www.rmp.gov.my/news-detail/2025/01/10/scam-alert---modul-operandi-scammer-menggunakan-kecerdasan-buatan-(ai)-untuk-meniru-suara-kenalan
+10. World Bank, Small and Medium Enterprises (SMEs) Finance: https://www.worldbank.org/en/topic/smefinance
+11. Stripe Radar product page: https://stripe.com/radar
+12. SEON fraud platform overview: https://seon.io/

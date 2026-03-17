@@ -41,6 +41,18 @@ class DemoCaseTests(unittest.TestCase):
         self.assertEqual(result.status, "Flag")
         self.assertIn("Balas YA", result.explanation)
 
+    def test_flag_case_supports_low_literacy_fast_route(self) -> None:
+        payload = dict(self.demo_cases["Flag"]["payload"])
+        payload["preferred_language"] = "English"
+        payload["response_profile"] = "fast_route"
+        payload["low_literacy"] = True
+        result = self.predictor.predict(payload, llm_client=None)
+        self.assertEqual(result.status, "Flag")
+        self.assertEqual(
+            result.explanation,
+            "We saw an unusual payment. Did you make it? Reply YES or NO.",
+        )
+
     def test_flag_case_supports_english_richer_route_without_llm(self) -> None:
         payload = dict(self.demo_cases["Flag"]["payload"])
         payload["preferred_language"] = "English"

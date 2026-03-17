@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" fill="none">
+  <rect width="1200" height="520" fill="#07131D"/>
+  <text x="70" y="88" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="42" font-weight="700">Exact Approve route</text>
+  <rect x="70" y="130" width="480" height="300" rx="24" fill="#0B1B26" stroke="#3A5060"/>
+  <text x="105" y="190" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="24">TransactionID</text>
+  <text x="330" y="190" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="24">3758164</text>
+  <text x="105" y="235" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="24">Amount</text>
+  <text x="330" y="235" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="24">100.00</text>
+  <text x="105" y="280" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="24">Route</text>
+  <text x="330" y="280" fill="#16A34A" font-family="Avenir Next, Arial" font-size="24" font-weight="700">Approve</text>
+  <text x="105" y="325" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="24">Risk score</text>
+  <text x="330" y="325" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="24">0</text>
+  <text x="105" y="370" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="24">User interruption</text>
+  <text x="330" y="370" fill="#F3EFE5" font-family="Avenir Next, Arial" font-size="24">None</text>
+  <rect x="640" y="150" width="470" height="230" rx="24" fill="#102331" stroke="#20475E"/>
+  <text x="675" y="210" fill="#F5EFD8" font-family="Avenir Next, Arial" font-size="30" font-weight="700">Interpretation</text>
+  <text x="675" y="255" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">The payment stays on the fast path because it fits</text>
+  <text x="675" y="285" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">a low-risk pattern. No confirmation message is sent.</text>
+  <text x="675" y="330" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">This is how PocketSignal avoids unnecessary friction</text>
+  <text x="675" y="360" fill="#D1D5DB" font-family="Avenir Next, Arial" font-size="22">for legitimate wallet activity.</text>
+</svg>

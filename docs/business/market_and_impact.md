@@ -2,102 +2,129 @@
 
 ## Market Position
 
-PocketSignal is a B2B2C fraud triage layer for digital wallets, super apps, neobanks, and payout platforms serving first-time or low-confidence digital finance users in ASEAN.
+PocketSignal is a B2B2C fraud triage layer for digital wallets, QR-payment ecosystems, super apps, and payout platforms.
 
-Our first commercial beachhead is the Philippines:
-- Bangko Sentral ng Pilipinas reported that account ownership rose to 65% in 2022, but 34.3 million Filipino adults were still unbanked.
-- This means inclusion is improving, but trust is still fragile.
-- For wallet users who treat their stored balance as daily working capital, one fraudulent debit can immediately disrupt food, transport, or inventory spending.
+Our pilot story is Malaysia-first.
+
+That is a logical starting point for two reasons:
+- Malaysia already has a large real-time QR and wallet acceptance footprint, so trust failures can affect everyday payments at national scale.
+- The product can be piloted locally by a Malaysian team, then adapted for lower-confidence or less-banked ASEAN segments.
+
+## Why Malaysia Is A Valid Starting Point
+
+- PayNet stated in February 2026 that there are more than **2.9 million DuitNow QR merchants across Malaysia**.
+- The World Bank Global Findex 2021 microdata shows that **91.4% of Malaysian adults had an account**. That means the next problem is not only access, but trusted usage.
+- Royal Malaysia Police (PDRM) scam alerts in January 2026 warned that scammers are already using **AI-generated voice deception** to pressure victims into urgent transfers.
+
+Operational reading:
+- Malaysia is not “too banked” for this problem.
+- It is exactly the kind of market where digital-payment infrastructure is mature, but scam pressure and trust erosion can still damage adoption.
 
 ## Primary Customer and End User
 
 ### Paying customer
 - Digital wallet providers
-- Super apps with wallet rails
-- Gig economy payout platforms
-- Payment processors serving QR and wallet merchants
+- Super apps with wallet or QR payment rails
+- Payout platforms serving gig workers
+- Payment processors and acquirers supporting wallet and QR merchants
 
 ### Protected end user
-- Gig workers receiving daily wallet payouts
-- Rural and neighborhood micro-merchants relying on QR or wallet acceptance
+- Gig workers receiving wallet payouts
+- Micro-merchants depending on QR or wallet transactions for daily cash flow
+- Users with lower fraud literacy or lower confidence when responding to suspicious payment alerts
 
 ## Why This Problem Has Real Demand
 
-1. Wallet onboarding is growing faster than fraud literacy.
-2. Legacy fraud controls optimize for detection only, not for user trust recovery.
-3. Hard declines are expensive in this segment because false positives can block legitimate earnings.
-4. Support teams need a triage system, not just a raw fraud score.
-5. World Bank notes that SMEs represent about 90% of businesses and more than 50% of employment globally, so protecting micro-merchant wallet trust has wider economic value than a narrow fraud KPI.
+1. Digital-payment usage is growing faster than fraud literacy.
+2. Hard declines are expensive when the user depends on wallet balance as working capital.
+3. Many fraud tools optimize only for scoring, not for trust-preserving recovery.
+4. Wallet operators need a route decision, not just a raw probability.
+5. In Malaysia and across ASEAN, QR and wallet flows now sit close to daily income and daily spending, so trust failures affect real economic participation.
 
 ## What Makes PocketSignal Commercially Relevant
 
-PocketSignal does not stop at "fraud score generated."
-
-It turns risk into three operational actions:
+PocketSignal converts model output into three operational actions:
 - `Approve`: low-risk transactions continue with minimal friction
-- `Flag`: ambiguous transactions trigger a local, user-friendly confirmation message
-- `Block`: high-confidence fraud is stopped immediately
+- `Flag`: gray-zone transactions trigger a local confirmation and recovery step
+- `Block`: the highest-confidence fraud lane is stopped immediately
 
-This is commercially useful because it reduces both fraud loss pressure and manual-review overload.
+This matters commercially because it helps operators avoid two extremes:
+- approving too much risk
+- blocking too many legitimate users
 
-## Evidence From the Current Prototype
+## Evidence From The Current Prototype
 
 From the current full-data validation run on IEEE-CIS:
 - `ROC-AUC`: `0.9006`
 - `PR-AUC`: `0.5007`
-- `Precision@Block`: `0.9255`
-- `FPR@Block`: `0.000386`
-- Fraud rate in the `Approve` bucket: `0.001693`
+- `Precision@Block`: `77.0%`
+- `FPR@Block`: `0.3569%`
+- Fraud rate in the `Approve` bucket: `0.4552%`
 
-Operational reading:
-- The `Block` lane is small and high-confidence.
-- The `Approve` lane is low-risk enough to support fast, low-friction routing.
-- The gray-zone `Flag` lane becomes the place for wallet-friendly confirmation and recovery.
+Operational reading from the calibrated routing run:
+- `Approve`: `73,817` transactions (`62.5%` of the validation split)
+- `Flag`: `42,519` transactions (`36.0%`)
+- `Block`: `1,772` transactions (`1.5%`)
+
+This is materially more operational than the earlier conservative trust-only routing, which pushed too much traffic into the gray zone.
+It also matters that `Flag` no longer means "send everything to human review". In the current prototype, the user can confirm or deny the payment directly in the recovery loop, so only denied or unresolved flagged cases need operator follow-up.
+
+## Why The Route Mix Now Makes More Sense
+
+PocketSignal is no longer presenting a prototype where almost every transaction falls into `Flag`.
+
+With the current calibrated thresholds:
+- most transactions stay on the `Approve` fast path
+- only the uncertain middle enters the recovery flow
+- the `Block` lane remains narrow enough to avoid a blunt-force fraud policy
+
+That makes the product easier to defend as an operator-facing system, not just a technical demo.
 
 ## Business Model
 
 PocketSignal is designed as a B2B2C infrastructure product.
 
 ### Revenue model
-- Pilot setup / integration fee
-- Recurring platform fee based on transaction volume reviewed
-- Optional on-prem or partner-VPC deployment support
-- Optional localization package for country- and language-specific user messaging
+- Pilot setup and integration fee
+- Recurring platform fee tied to monitored transaction volume
+- Optional partner-VPC or on-prem deployment support
+- Optional localization package for language, wording, and market-specific risk policy tuning
 
 ### Why partners would pay
-- Lower fraud losses
-- Lower false-positive cost
-- Lower support burden for suspicious but recoverable transactions
-- Better customer trust than a silent decline-only workflow
+- Lower fraud loss exposure
+- Lower false-positive cost than a block-heavy policy
+- Better user trust than silent decline workflows
+- Fewer cases escalated into human handling than a review-everything model, because part of the gray zone can be resolved through direct user confirmation
 
 ## Target Market Story For Judges
 
-PocketSignal is not trying to replace every enterprise fraud stack on day one.
+PocketSignal is not trying to replace every enterprise fraud stack in phase one.
 
-The initial wedge is narrower and stronger:
-- wallet providers serving high-volume, low-ticket transactions
-- users with lower digital literacy
-- segments where trust and recovery matter almost as much as raw detection
+The first wedge is narrower:
+- QR and wallet ecosystems
+- low-ticket but high-frequency payment flows
+- segments where trust recovery matters almost as much as raw fraud detection
 
-That makes the product easier to pilot, easier to justify commercially, and easier to expand across ASEAN after proof of value.
+That makes the product more realistic to pilot and easier to justify commercially.
 
 ## Social Impact and SDG 8.10
 
-PocketSignal aligns with SDG 8.10 because it protects the reliability of digital financial access.
+PocketSignal aligns with SDG 8.10 because it helps people use formal digital financial channels with more confidence.
 
 Impact chain:
 - fewer fraudulent debits
-- fewer unnecessary hard declines
-- more confidence in keeping money inside formal digital channels
-- more stable day-to-day income use for workers and merchants
+- fewer unnecessary hard stops
+- clearer user confirmation when the model is uncertain
+- higher trust in keeping earnings and payments inside formal digital systems
 
-## Quantified Impact Framing
+## Judge-Friendly Summary
 
 Use this wording in the pitch:
 
-"In our current validation run, the auto-block lane achieves 92.6% precision with a 0.0386% false-positive rate, while the approve bucket stays at only 0.169% fraud rate. That means we can reserve hard blocking for very high-confidence cases and use human-readable confirmation for the gray zone."
+"PocketSignal is a Malaysia-first fraud triage layer for wallet and QR ecosystems. In our current calibrated routing run, about 62.5 percent of validation traffic stays on the Approve fast path, about 36 percent enters the gray-zone recovery flow, and only 1.5 percent enters the narrow Block lane. Because the gray zone can be resolved through direct user confirmation or denial, the route mix is more operational than a review-everything system while still preserving user trust."
 
 ## Source Notes
 
-- Bangko Sentral ng Pilipinas, 2022 Financial Inclusion Survey
-- World Bank, SME Finance
+- PayNet press release on DuitNow QR merchant scale
+- World Bank Global Findex 2021 microdata for Malaysia
+- Royal Malaysia Police scam alert notices

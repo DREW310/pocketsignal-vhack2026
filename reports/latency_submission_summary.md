@@ -1,34 +1,37 @@
 # PocketSignal Latency Submission Summary
 
-Use this file for slides and judge prep so the two latency modes are not mixed up.
+## Why There Are Two Latency Reports
 
-## Summary
+PocketSignal supports two local recovery modes for the `Flag` route:
+- **Richer local wording**: better user-facing recovery text through local Ollama generation
+- **Faster local wording**: deterministic local wording for stricter latency settings
 
-PocketSignal now supports two valid local `Flag` recovery modes:
+This is an intentional deployment trade-off, not a measurement inconsistency.
 
-1. `judge_demo`
-- prioritizes richer local wording through Ollama
-- best for demo quality and human-centered recovery storytelling
+## Current Local Mixed Exact-Case Results
 
-2. `fast_route`
-- prioritizes deterministic local wording
-- best for stricter latency targets
+### Richer local wording (`response_profile=judge_demo`)
+- `Approve p95`: `96.976 ms`
+- `Flag p95`: `4574.600 ms`
+- `Block p95`: `72.341 ms`
+- `Error count`: `0`
 
-## Measured Results
+Reading:
+- best for demo clarity and richer on-screen recovery wording
+- the gray-zone `Flag` path is slower because it includes local generation
 
-| Mode | Approve p95 | Flag p95 | Block p95 | Notes |
-|---|---:|---:|---:|---|
-| `judge_demo` | 41.698 ms | 4792.384 ms | 56.809 ms | richer local generation path |
-| `fast_route` | 72.759 ms | 72.529 ms | 81.570 ms | deterministic local wording path |
+### Faster local wording (`response_profile=fast_route`)
+- `Approve p95`: `113.324 ms`
+- `Flag p95`: `110.790 ms`
+- `Block p95`: `130.708 ms`
+- `Error count`: `0`
 
-## What We Can Say Accurately
+Reading:
+- best for deployment-oriented latency discussion
+- all three routes stayed within roughly `131 ms` p95 in the current mixed exact-case local run
 
-- PocketSignal supports both a richer local explanation mode and a faster local wording mode.
-- In the current mixed exact-case local benchmark, `fast_route` kept all three routes under `100 ms` p95.
-- In the current mixed exact-case local benchmark, `judge_demo` delivered the strongest user-facing wording but a much slower `Flag` path.
+## Judge-Safe Summary
 
-## What We Should Not Say
+Use this exact wording in slides or speech:
 
-- Do not say every route is under `50 ms`.
-- Do not say the richer wording path is sub-second.
-- Do not mix the two modes into one latency claim.
+"PocketSignal supports two local recovery modes. The richer local wording mode gives better demo-quality user messaging but a slower gray-zone path. The faster local wording mode keeps all three routes close to real-time in our current mixed exact-case local benchmark, with no request errors in the run."

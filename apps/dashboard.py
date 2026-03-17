@@ -15,7 +15,7 @@ import sys
 import time
 from html import escape
 from pathlib import Path
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 import streamlit as st
@@ -87,19 +87,12 @@ def post_predict(payload: dict) -> dict:
     try:
         with urlopen(req, timeout=FRONTEND_HTTP_TIMEOUT_SECONDS) as resp:
             return json.loads(resp.read().decode("utf-8"))
+    except HTTPError as exc:
+        raise RuntimeError(f"Backend returned HTTP {exc.code}.") from exc
     except (URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
-        preferred_language = payload.get("preferred_language")
-        return {
-            "status": "Flag",
-            "risk_score": 75,
-            "top_features": ["unusual amount pattern", "unusual device or browser context"],
-            "explanation": (
-                f"Backend unavailable ({exc.__class__.__name__}). "
-                f"{fallback_flag_message(preferred_language, payload.get('TransactionAmt'))}"
-            ),
-            "latency_ms": 0.0,
-            "model_version": "fallback",
-        }
+        raise RuntimeError(
+            f"Backend unavailable ({exc.__class__.__name__}). Check that FastAPI is running and reachable."
+        ) from exc
 
 
 def status_badge(status: str) -> str:
@@ -128,6 +121,7 @@ def render_transaction_stream(rows: list[dict]) -> None:
             f"<td>{escape(str(row.get('TransactionID', 'n/a')))}</td>"
             f"<td>{float(row.get('TransactionAmt', 0.0)):.2f}</td>"
             f"<td>{status_badge(str(row.get('status', 'Flag')))}</td>"
+            f"<td>{escape(str(row.get('recovery_state', 'Not needed')))}</td>"
             f"<td>{escape(str(row.get('risk_score', 'n/a')))}</td>"
             f"<td>{float(row.get('latency_ms', 0.0)):.1f}</td>"
             "</tr>"
@@ -136,24 +130,92 @@ def render_transaction_stream(rows: list[dict]) -> None:
     html = (
         "<div class='table-wrap'>"
         "<table class='signal-table'>"
-        "<thead><tr><th>TransactionID</th><th>Amount</th><th>Status</th><th>Risk</th><th>Latency (ms)</th></tr></thead>"
+        "<thead><tr><th>TransactionID</th><th>Amount</th><th>Status</th><th>Recovery</th><th>Risk</th><th>Latency (ms)</th></tr></thead>"
         f"<tbody>{''.join(html_rows)}</tbody></table></div>"
     )
     st.markdown(html, unsafe_allow_html=True)
 
 
-def render_phone(messages: list[dict], literacy_mode: bool, latest_status: str | None) -> None:
+def confirmation_copy(language: str, action: str, low_literacy: bool) -> tuple[str, str, str]:
+    normalized = "bahasa_melayu" if language == "Bahasa Melayu" else "english"
+    if action == "confirm":
+        if normalized == "bahasa_melayu":
+            return (
+                "Pengguna sahkan",
+                "YA, ini transaksi saya.",
+                "Disahkan oleh pengguna. Transaksi boleh diteruskan.",
+            )
+        return (
+            "User confirms",
+            "YES, this was my payment.",
+            "Confirmed by user. The transaction can continue.",
+        )
+
+    if normalized == "bahasa_melayu":
+        detail = "Sekat dan semak secara manual." if low_literacy else "Transaksi disekat dan dihantar untuk semakan manual."
+        return (
+            "Pengguna tolak",
+            "TIDAK, sekat transaksi ini.",
+            detail,
+        )
+    detail = "Blocked and sent for manual review." if low_literacy else "Blocked after denial and escalated to manual review."
+    return (
+        "User denies",
+        "NO, block this payment.",
+        detail,
+    )
+
+
+def sync_recovery_state(transaction_id: int | None, recovery_state: str) -> None:
+    if transaction_id is None:
+        return
+    for row in st.session_state.transactions:
+        if int(row.get("TransactionID", -1)) == int(transaction_id):
+            row["recovery_state"] = recovery_state
+            break
+
+    latest = st.session_state.last_response
+    if latest is not None and int(latest.get("TransactionID", -1)) == int(transaction_id):
+        latest["recovery_state"] = recovery_state
+
+
+def resolve_latest_recovery(action: str) -> None:
+    if not st.session_state.recoveries:
+        return
+
+    latest = st.session_state.recoveries[-1]
+    if latest.get("resolution_state") != "Pending user confirmation":
+        return
+
+    low_literacy = bool(latest.get("low_literacy", False))
+    button_label, user_text, assistant_text = confirmation_copy(
+        str(latest.get("language", "English")),
+        action=action,
+        low_literacy=low_literacy,
+    )
+    latest["messages"].append({"speaker": "user", "text": user_text})
+    latest["messages"].append({"speaker": "assistant", "text": assistant_text})
+
+    if action == "confirm":
+        latest["resolution_state"] = "Confirmed by user"
+    else:
+        latest["resolution_state"] = "Blocked after denial; escalated to manual review"
+    latest["resolution_button"] = button_label
+    sync_recovery_state(latest.get("transaction_id"), latest["resolution_state"])
+
+
+def render_phone(recoveries: list[dict], latest_status: str | None) -> None:
     st.markdown("### Customer Recovery")
     st.caption("This panel keeps the latest flagged conversation even if the newest decision becomes Approve or Block.")
     st.markdown("<div class='phone-shell'><div class='phone-header'>PocketSignal Assist</div>", unsafe_allow_html=True)
 
-    if not messages:
+    if not recoveries:
         st.markdown(
             "<div class='phone-body'><div class='bubble bot'>No flagged conversations yet.</div></div>",
             unsafe_allow_html=True,
         )
     else:
-        latest_flag = messages[-1]
+        latest_flag = recoveries[-1]
         meta = (
             f"Latest flagged case: TransactionID {latest_flag.get('transaction_id', 'unknown')}, "
             f"risk {latest_flag.get('risk_score', 'n/a')}"
@@ -161,13 +223,35 @@ def render_phone(messages: list[dict], literacy_mode: bool, latest_status: str |
         if latest_status and latest_status != "Flag":
             meta += " (left board may now show a different route)"
         bubbles = [f"<div class='chat-meta'>{escape(meta)}</div>"]
-        for msg in messages[-4:]:
+        for msg in latest_flag.get("messages", [])[-6:]:
+            speaker = str(msg.get("speaker", "assistant"))
             text = str(msg.get("text", ""))
-            if literacy_mode and len(text) > 150:
-                text = text[:150] + "..."
-            bubbles.append(f"<div class='bubble bot'>{escape(text)}</div>")
-            bubbles.append("<div class='bubble user'>I will check now.</div>")
+            css_class = "user" if speaker == "user" else "bot"
+            bubbles.append(f"<div class='bubble {css_class}'>{escape(text)}</div>")
         st.markdown(f"<div class='phone-body'>{''.join(bubbles)}</div>", unsafe_allow_html=True)
+        if latest_flag.get("resolution_state") == "Pending user confirmation":
+            confirm_label, _, _ = confirmation_copy(
+                str(latest_flag.get("language", "English")),
+                action="confirm",
+                low_literacy=bool(latest_flag.get("low_literacy", False)),
+            )
+            deny_label, _, _ = confirmation_copy(
+                str(latest_flag.get("language", "English")),
+                action="deny",
+                low_literacy=bool(latest_flag.get("low_literacy", False)),
+            )
+            action_cols = st.columns(2)
+            with action_cols[0]:
+                if st.button(confirm_label, use_container_width=True, key=f"confirm_{latest_flag.get('transaction_id')}"):
+                    resolve_latest_recovery("confirm")
+                    st.rerun()
+            with action_cols[1]:
+                if st.button(deny_label, use_container_width=True, key=f"deny_{latest_flag.get('transaction_id')}"):
+                    resolve_latest_recovery("deny")
+                    st.rerun()
+            st.caption("This makes the recovery loop explicit: the user can confirm the payment or deny it and force a block plus manual review.")
+        else:
+            st.success(str(latest_flag.get("resolution_state", "Resolved")))
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -190,16 +274,27 @@ def submit_payload(payload: dict) -> None:
     response = post_predict(payload)
     enriched = dict(payload)
     enriched.update(response)
+    enriched["recovery_state"] = "Not needed"
     st.session_state.transactions.insert(0, enriched)
     st.session_state.last_response = enriched
+    st.session_state.last_error = None
     if response.get("status") == "Flag":
         # The recovery panel intentionally preserves the latest flagged conversation
         # so judges can keep reading it even after a later Approve or Block case.
-        st.session_state.messages.append(
+        enriched["recovery_state"] = "Pending user confirmation"
+        st.session_state.recoveries.append(
             {
-                "text": response.get("explanation", ""),
+                "messages": [
+                    {
+                        "speaker": "assistant",
+                        "text": response.get("explanation", ""),
+                    }
+                ],
                 "transaction_id": enriched.get("TransactionID"),
                 "risk_score": response.get("risk_score"),
+                "language": payload.get("preferred_language", "English"),
+                "low_literacy": bool(payload.get("low_literacy", False)),
+                "resolution_state": "Pending user confirmation",
             }
         )
 
@@ -437,10 +532,12 @@ def main() -> None:
 
     if "transactions" not in st.session_state:
         st.session_state.transactions = []
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    if "recoveries" not in st.session_state:
+        st.session_state.recoveries = []
     if "last_response" not in st.session_state:
         st.session_state.last_response = None
+    if "last_error" not in st.session_state:
+        st.session_state.last_error = None
 
     demo_cases = load_demo_cases()
     metrics = load_metrics_snapshot()
@@ -469,6 +566,8 @@ def main() -> None:
     with left_col:
         st.markdown("### Demo Console")
         st.caption("Use exact saved cases during judging. Manual test is only for ad-hoc checks.")
+        if st.session_state.last_error:
+            st.error(st.session_state.last_error)
 
         response_profile_label = st.radio(
             "Recovery message mode",
@@ -490,8 +589,9 @@ def main() -> None:
             st.markdown("")
             if st.button("Clear history", use_container_width=True):
                 st.session_state.transactions = []
-                st.session_state.messages = []
+                st.session_state.recoveries = []
                 st.session_state.last_response = None
+                st.session_state.last_error = None
 
         if st.button("Run selected exact case", use_container_width=True):
             selected = demo_cases.get(exact_case, {})
@@ -499,7 +599,12 @@ def main() -> None:
             if payload:
                 payload["preferred_language"] = message_language
                 payload["response_profile"] = response_profile_value(response_profile_label)
-                submit_payload(payload)
+                payload["low_literacy"] = literacy_mode
+                try:
+                    submit_payload(payload)
+                except RuntimeError as exc:
+                    st.session_state.last_error = str(exc)
+                    st.rerun()
 
         st.caption(
             "Recommended live order: Approve -> Flag -> Block. "
@@ -528,14 +633,24 @@ def main() -> None:
                     "DeviceType": device_type or None,
                     "preferred_language": message_language,
                     "response_profile": response_profile_value(response_profile_label),
+                    "low_literacy": literacy_mode,
                 }
-                submit_payload(payload)
+                try:
+                    submit_payload(payload)
+                except RuntimeError as exc:
+                    st.session_state.last_error = str(exc)
+                    st.rerun()
 
             if st.button("Simulate random transaction", use_container_width=True):
                 payload = random_payload()
                 payload["preferred_language"] = message_language
                 payload["response_profile"] = response_profile_value(response_profile_label)
-                submit_payload(payload)
+                payload["low_literacy"] = literacy_mode
+                try:
+                    submit_payload(payload)
+                except RuntimeError as exc:
+                    st.session_state.last_error = str(exc)
+                    st.rerun()
 
         latest = st.session_state.last_response
         st.markdown("")
@@ -543,6 +658,7 @@ def main() -> None:
         if latest is None:
             st.info("No decision yet. Load an exact case to begin the demo.")
         else:
+            recovery_state = latest.get("recovery_state")
             st.markdown(
                 (
                     "<div class='decision-strip'>"
@@ -553,6 +669,8 @@ def main() -> None:
                 ),
                 unsafe_allow_html=True,
             )
+            if recovery_state and recovery_state != "Not needed":
+                st.caption(f"Recovery outcome: {recovery_state}")
             top_reasons = latest.get("top_features") or []
             if top_reasons:
                 reason_markup = "".join(
@@ -567,7 +685,7 @@ def main() -> None:
         if st.session_state.last_response is not None:
             latest_status = str(st.session_state.last_response.get("status"))
 
-        render_phone(st.session_state.messages, literacy_mode=literacy_mode, latest_status=latest_status)
+        render_phone(st.session_state.recoveries, latest_status=latest_status)
 
 
 if __name__ == "__main__":

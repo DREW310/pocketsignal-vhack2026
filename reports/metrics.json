@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T14:45:40.979805+00:00",
+  "generated_at": "2026-03-17T08:47:24.834338+00:00",
   "config_path": "/Users/drewdo/Downloads/Varsity_Hackathon_2026/config.yaml",
   "sample_frac": 1.0,
   "rows": 590540,
@@ -7,24 +7,24 @@
     "roc_auc": 0.900588456137388,
     "pr_auc": 0.5007131722377514,
     "brier": 0.02379271081918891,
-    "precision_block": 0.9255499153976311,
-    "recall_block": 0.1345964566929134,
-    "false_positive_rate_block": 0.00038581600084178035,
-    "approve_fraud_rate": 0.0016933751858582522,
+    "precision_block": 0.7703160270880361,
+    "recall_block": 0.3358759842519685,
+    "false_positive_rate_block": 0.0035687980077864683,
+    "approve_fraud_rate": 0.00455179701152851,
     "thresholds": {
-      "approve_threshold": 21,
-      "block_threshold": 99
+      "approve_threshold": 63,
+      "block_threshold": 98
     },
     "confusion_matrix_block": {
-      "tn": 114000,
-      "fp": 44,
-      "fn": 3517,
-      "tp": 547
+      "tn": 113637,
+      "fp": 407,
+      "fn": 2699,
+      "tp": 1365
     },
     "route_distribution": {
-      "Approve": 24212,
-      "Flag": 93305,
-      "Block": 591
+      "Approve": 73817,
+      "Flag": 42519,
+      "Block": 1772
     }
   },
   "training_summary": {
@@ -39,8 +39,8 @@
     ]
   },
   "thresholds": {
-    "approve_threshold": 21,
-    "block_threshold": 99
+    "approve_threshold": 63,
+    "block_threshold": 98
   },
   "seed": 2026
 }

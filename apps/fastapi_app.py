@@ -43,6 +43,7 @@ class PredictRequest(BaseModel):
     DeviceInfo: str | None = None
     preferred_language: str | None = None
     response_profile: str | None = None
+    low_literacy: bool | None = None
 
     class Config:
         extra = "allow"

@@ -1,6 +1,6 @@
 # Latency Report
 
-Generated: 2026-03-17T00:00:00+08:00
+Generated: 2026-03-17T09:01:50.701546+00:00
 
 ## Run Metadata
 
@@ -14,26 +14,20 @@ Generated: 2026-03-17T00:00:00+08:00
 | Metric | Value |
 |---|---:|
 | Count | 60 |
-| Avg | 829.598 |
-| p50 | 39.834 |
-| p95 | 2324.297 |
-| p99 | 4792.384 |
+| Avg | 877.732 |
+| p50 | 37.212 |
+| p95 | 2909.391 |
+| p99 | 4574.600 |
 
 ## Per Route Roundtrip Latency (ms)
 
 | Status | Count | Avg | p50 | p95 | p99 |
 |---|---:|---:|---:|---:|---:|
-| Approve | 20 | 29.052 | 25.538 | 41.698 | 78.861 |
-| Block | 20 | 39.942 | 39.578 | 56.809 | 78.824 |
-| Flag | 20 | 2419.799 | 2103.032 | 4792.384 | 5431.312 |
+| Approve | 20 | 36.868 | 27.456 | 96.976 | 99.108 |
+| Block | 20 | 37.986 | 32.425 | 72.341 | 95.269 |
+| Flag | 20 | 2558.343 | 2213.961 | 4574.600 | 5072.341 |
 
 ## Gate C Check
 
 - Approve/Block p95 < 50ms: False
 - Flag p95 < 1s: False
-
-## Interpretation
-
-- This is the richer local wording mode used for the strongest demo experience.
-- `Approve` remains fast and `Block` stays close to fast-path expectations.
-- `Flag` is intentionally slower because it includes local language generation through Ollama.

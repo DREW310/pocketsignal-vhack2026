@@ -65,14 +65,18 @@ model:
     random_state: 2026
 
 routing:
-  approve_threshold: 70
-  block_threshold: 90
+  approve_threshold: 65
+  block_threshold: 98
   optimize_thresholds: true
-  target_block_fpr: 0.01
+  target_block_fpr: 0.005
   target_approve_fraud_rate: 0.005
-  min_approve_share: 0.20
-  min_flag_share: 0.02
-  min_block_share: 0.002
+  min_approve_share: 0.50
+  min_flag_share: 0.10
+  min_block_share: 0.010
+  max_flag_share: 0.40
+  target_approve_share: 0.60
+  target_flag_share: 0.35
+  target_block_share: 0.015
 
 llm:
   enabled: true

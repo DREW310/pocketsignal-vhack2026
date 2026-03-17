@@ -1,45 +1,134 @@
 # PocketSignal
 
-PocketSignal is the product built by Team Cache Me for V-HACK 2026 Case Study 2 (Digital Trust - Real-Time Fraud Shield for the Unbanked).
+PocketSignal is Team Cache Me's V-HACK 2026 prototype for Case Study 2: **Digital Trust – Real-Time Fraud Shield for the Unbanked**.
 
-## Why this repo exists
-- Build a complete, free-to-run fraud triage pipeline with reproducible evidence.
-- Demonstrate a working prototype with calibrated `Approve / Flag / Block` routing.
-- Keep all sensitive data local (no OpenAI API usage).
+It is a privacy-first fraud triage layer for digital wallets and QR-payment ecosystems.
+Instead of returning only a fraud score, PocketSignal turns each transaction into one of three actions:
+- `Approve` for low-risk activity
+- `Flag` for the gray zone that needs user confirmation
+- `Block` for the highest-confidence fraud lane
 
-## Tech stack (all free)
-- Data/ML: pandas, scikit-learn, LightGBM, CatBoost, SHAP, NetworkX
-- API: FastAPI + Uvicorn
-- Dashboard: Streamlit
-- Local LLM: Ollama (`llama3`) for Flag-case chat-style explanation in English or Bahasa Melayu
+The main idea is simple: **detect risk, choose the right intervention, and communicate it in a way the user can act on.**
+
+## Why this project matters
+
+PocketSignal is designed around a Malaysia-first pilot story.
+
+- PayNet reported in February 2026 that more than **2.9 million merchants in Malaysia** accept DuitNow QR.
+- The World Bank Global Findex 2021 microdata shows that **91.4% of Malaysian adults had an account**, so the next barrier is trusted usage, not only basic access.
+- Royal Malaysia Police scam alerts in January 2026 warned that scammers are already using **AI-generated voice deception** to pressure victims into urgent transfers.
+
+That combination makes Malaysia a logical place to pilot a trust-preserving fraud workflow before adapting the same product for broader ASEAN wallet use cases.
+
+## Product walkthrough
+
+![PocketSignal overview](docs/assets/overview.svg)
+
+This overview shows the three calibrated routes. Only the gray-zone `Flag` route activates a recovery step.
+
+### Exact `Approve` route
+
+![Exact Approve route](docs/assets/approve_route.svg)
+
+The `Approve` lane keeps legitimate transactions on the fast path with no unnecessary interruption.
+
+### Exact `Flag` route
+
+![Exact Flag route](docs/assets/flag_route.svg)
+
+The `Flag` lane now supports a real closed loop: the user can confirm or deny the payment, and the dashboard records the outcome instead of showing a fake static reply.
+
+### Exact `Block` route
+
+![Exact Block route](docs/assets/block_route.svg)
+
+The `Block` lane is intentionally narrow so hard intervention is reserved for the highest-confidence fraud cases.
+
+## Architecture
+
+![PocketSignal architecture](docs/assets/architecture.svg)
+
+PocketSignal combines three layers of value:
+1. behavior-aware and graph-aware fraud scoring
+2. calibrated `Approve / Flag / Block` routing
+3. local recovery wording only for the gray zone
+
+## Current validation evidence
+
+From the current full-data validation run:
+- `ROC-AUC`: `0.9006`
+- `PR-AUC`: `0.5007`
+- `Block precision`: `77.0%`
+- `Block false-positive rate`: `0.3569%`
+- `Approve-bucket fraud rate`: `0.4552%`
+
+Current calibrated route mix on the validation split:
+- `Approve`: `73,817` (`62.5%`)
+- `Flag`: `42,519` (`36.0%`)
+- `Block`: `1,772` (`1.5%`)
+
+This route mix is materially more operational than the earlier conservative version that pushed too much traffic into the gray zone.
+Not every `Flag` becomes manual review: the current recovery loop can resolve part of the gray zone directly through user confirmation or denial.
+
+## Key technical choices
+
+### 1. Behavioral profiling
+PocketSignal engineers leak-safe historical behavior features such as:
+- past transaction count
+- past average amount
+- time-derived patterns
+
+### 2. Context-aware graph features
+PocketSignal also models relationships such as:
+- `card1 -> DeviceInfo`
+- `card1 -> P_emaildomain`
+
+This helps surface suspicious shared infrastructure without moving to a heavier graph-neural deployment stack.
+
+### 3. Calibrated triage instead of a raw score
+PocketSignal does not expose only a raw fraud probability.
+It calibrates the score, then maps it into a route that a wallet operator can actually act on.
+
+### 4. Local recovery wording
+Only `Flag` transactions trigger recovery wording.
+Two local modes are supported:
+- **Richer local wording** (`response_profile=judge_demo`): uses Ollama when available for a more natural recovery message
+- **Faster local wording** (`response_profile=fast_route`): uses deterministic local wording for tighter latency
+
+### 5. Real low-literacy support
+Low-literacy mode now changes the wording itself instead of only truncating text.
+Example fast local wording:
+- English: `We saw an unusual payment. Did you make it? Reply YES or NO.`
+- Bahasa Melayu: `Kami nampak transaksi luar biasa. Adakah ini anda? Balas YA atau TIDAK.`
 
 ## Repository structure
-- `config.yaml`: centralized experiment and routing configuration
+
+- `config.yaml`: centralized data, model, routing, and LLM configuration
 - `src/payung/preprocess.py`: data merge + engineered features + feature store
-- `src/payung/modeling.py`: model training, calibration, threshold optimization, evaluation
-- `src/payung/inference.py`: online inference service logic
-- `src/payung/llm.py`: Ollama local client and fallback behavior
-- `apps/fastapi_app.py`: `/predict` and `/health` endpoints
-- `apps/dashboard.py`: real-time dashboard with chat-style confirmation panel
-- `scripts/preprocess.py`: data engineering run + profile report
-- `scripts/train.py`: end-to-end train + metrics artifact generation
-- `scripts/run_ablation.py`: ablation (graph / imbalance / ensemble)
-- `scripts/load_test.py`: latency testing for Gate C
-- `reports/`: generated technical reports
-- `docs/`: case-study alignment, privacy notes, and business context
+- `src/payung/modeling.py`: training, calibration, threshold optimization, evaluation
+- `src/payung/inference.py`: online inference and explanation routing
+- `src/payung/llm.py`: local wording helpers and Ollama client
+- `apps/fastapi_app.py`: `/health` and `/predict` endpoints
+- `apps/dashboard.py`: judge-facing dashboard with exact demo path and customer recovery panel
+- `scripts/`: training, ablation, demo-case generation, latency testing, and sample prediction helpers
+- `reports/`: generated metrics, ablation, latency, and demo-case artifacts
+- `docs/`: business, ethics, and case-study alignment notes
 
 ## Included reproducibility artifacts
-- `artifacts/model_bundle.pkl` lets judges and teammates run the API and dashboard without retraining first.
-- `reports/metrics.json` and `reports/demo_cases.json` feed the dashboard hero metrics and exact demo path.
-- `reports/latency_judge_demo.md` and `reports/latency_fast_route.md` document the two local recovery trade-offs.
 
-## Data access note
-- This public repository does not redistribute Kaggle raw CSV files.
-- Download the IEEE-CIS files into the project root before running preprocessing or retraining.
-- Cache folders such as `__pycache__/`, `.DS_Store`, and `catboost_info/` are intentionally excluded.
+This public repo includes the files needed to run the prototype without retraining first:
+- `artifacts/model_bundle.pkl`
+- `reports/metrics.json`
+- `reports/demo_cases.json`
+- `reports/latency_judge_demo.md`
+- `reports/latency_fast_route.md`
+- `reports/latency_submission_summary.md`
+
+The raw Kaggle CSV files are intentionally **not** redistributed here.
 
 ## Quick start
-1. Install dependencies
+
+### 1. Install dependencies
 
 macOS / Linux:
 ```bash
@@ -51,7 +140,7 @@ Windows PowerShell:
 py -3 -m pip install -r requirements.txt
 ```
 
-2. Optional preprocessing run (sample mode)
+### 2. Optional preprocessing run
 
 macOS / Linux:
 ```bash
@@ -63,7 +152,7 @@ Windows PowerShell:
 py -3 scripts/preprocess.py --sample-frac 0.10
 ```
 
-3. Train and export the model bundle
+### 3. Train and export the model bundle
 
 macOS / Linux:
 ```bash
@@ -75,38 +164,26 @@ Windows PowerShell:
 py -3 scripts/train.py --sample-frac 0.10
 ```
 
-If your local environment has OpenMP runtime issues, use:
+If your environment has OpenMP issues, use safe mode:
 ```bash
 python3 scripts/train.py --sample-frac 0.10 --safe-mode
 ```
-This switches to a LogisticRegression fallback model for reproducible local delivery.
 
-If LightGBM fails on macOS with `libomp.dylib` missing, install:
-```bash
-brew install libomp
-```
-
-4. (Optional) Run ablation study:
+### 4. Optional ablation run
 ```bash
 python3 scripts/run_ablation.py --sample-frac 0.05
 ```
-Or safe fallback mode:
-```bash
-python3 scripts/run_ablation.py --sample-frac 0.05 --safe-mode
-```
 
-5. Install and warm the local LLM (optional for richer wording mode)
-
-macOS / Windows:
+### 5. Install Ollama for richer local wording mode
 ```bash
 ollama pull llama3
 ```
 
-For a lighter richer-wording benchmark, Final-round candidates include:
+Lighter local richer-wording benchmarks for future work:
 - `ollama pull llama3.2:1b`
 - `ollama pull qwen2.5:1.5b`
 
-6. Start FastAPI backend
+### 6. Start the FastAPI backend
 
 macOS / Linux:
 ```bash
@@ -121,11 +198,6 @@ POCKETSIGNAL_OLLAMA_PRELOAD=1
 POCKETSIGNAL_OLLAMA_TIMEOUT=8
 ```
 
-- `POCKETSIGNAL_RESPONSE_PROFILE=fast_route` makes the gray-zone recovery path use deterministic local wording by default.
-- `POCKETSIGNAL_OLLAMA_KEEP_ALIVE=10m` keeps the richer local wording model resident between requests when supported by Ollama.
-- `POCKETSIGNAL_OLLAMA_PRELOAD=1` attempts a best-effort warm preload on startup.
-- `POCKETSIGNAL_OLLAMA_TIMEOUT=8` is a more realistic demo-time timeout than the strict low default used in development.
-
 Windows PowerShell:
 ```powershell
 $env:PYTHONPATH="src"
@@ -133,7 +205,7 @@ $env:POCKETSIGNAL_OLLAMA_TIMEOUT="8"
 py -3 -m uvicorn apps.fastapi_app:app --host 0.0.0.0 --port 8000
 ```
 
-7. Start Streamlit dashboard
+### 7. Start the Streamlit dashboard
 
 macOS / Linux:
 ```bash
@@ -145,35 +217,44 @@ Windows PowerShell:
 py -3 -m streamlit run apps/dashboard.py
 ```
 
-8. Run latency tests (evidence)
+### 8. Generate the exact demo cases
+```bash
+python3 scripts/find_demo_cases.py --sample-frac 0.02
+```
+
+### 9. Run latency evidence
 ```bash
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile judge_demo --output reports/latency_judge_demo.md
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile fast_route --output reports/latency_fast_route.md
 ```
 
-9. Find demo-friendly transactions
-```bash
-python3 scripts/find_demo_cases.py --sample-frac 0.02
-```
-This writes `reports/demo_cases.json` with one candidate each for `Approve`, `Flag`, and `Block`.
+## Demo path used in judging
 
-## Cross-platform demo note
-- Judges and teammates do not need to retrain the model to run the demo.
-- The public repo includes `artifacts/model_bundle.pkl`, `reports/metrics.json`, and `reports/demo_cases.json`.
-- That means a Windows teammate can install dependencies, start FastAPI and Streamlit, and run the same exact demo cases without redoing training first.
-- If Ollama is unavailable on a teammate laptop, the system can still demonstrate the `Flag` route by switching to the faster deterministic local wording path.
+For the live demo, use the exact saved cases in this order:
+1. `Approve`
+2. `Flag`
+3. `Block`
+
+For the `Flag` case, the dashboard now supports an explicit user-response loop:
+- user confirms
+- or user denies and triggers a blocked / manual-review outcome
+
+That makes the recovery flow visible instead of leaving it as a static message bubble.
 
 ## API contract
+
 `POST /predict`
-- Input: transaction feature JSON (`TransactionAmt`, `card1`, `DeviceInfo`, ...)
-- Output:
+- input: transaction feature JSON (`TransactionAmt`, `card1`, `DeviceInfo`, ...)
+- optional fields:
+  - `preferred_language`: `English | Bahasa Melayu`
+  - `response_profile`: richer local wording (`judge_demo`) or faster local wording (`fast_route`)
+  - `low_literacy`: `true | false`
+- output:
   - `status`: `Approve | Flag | Block`
-  - `risk_score`: integer 0-100, mapped from the validation score distribution
+  - `risk_score`: integer `0-100`
   - `probability`: calibrated fraud probability
-  - `top_features`: top model-driven factors
-  - `explanation`: local explanation text (LLM only for `Flag`)
-  - `preferred_language`: optional (`English | Bahasa Melayu`)
-  - `response_profile`: optional (`judge_demo | fast_route`)
+  - `top_features`: human-readable risk reasons
+  - `explanation`: local recovery or route explanation
   - `latency_ms`
   - `model_version`
 
@@ -182,25 +263,8 @@ This writes `reports/demo_cases.json` with one candidate each for `Approve`, `Fl
 - `ollama_ready`
 - `feature_store_ready`
 
-## Routing policy
-- `Approve`: score < calibrated `approve_threshold`
-- `Flag`: `approve_threshold` <= score <= `block_threshold`
-- `Block`: score > calibrated `block_threshold`
-
-Thresholds are auto-optimized on validation data and persisted in the model bundle.
-The current sample run writes the exact values into `reports/metrics_report.md` and `reports/metrics.json`.
-The optimizer also enforces minimum `Approve`, `Flag`, and `Block` route shares to avoid degenerate runs where one bucket collapses.
-
-## Flag explanation modes
-- `judge_demo`: uses richer local Ollama wording when available and falls back to a deterministic local template if generation is unavailable
-- `fast_route`: skips LLM generation and uses a deterministic local confirmation template for lower latency
-
-Example latency command using fast local template mode:
-```bash
-python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile fast_route
-```
-
 ## Key evidence files
+
 - `reports/metrics_report.md`
 - `reports/metrics.json`
 - `reports/leakage_check.md`
@@ -210,3 +274,8 @@ python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 
 - `reports/latency_submission_summary.md`
 - `docs/case_study2_compliance.md`
 - `docs/privacy_and_ethics.md`
+- `docs/business/market_and_impact.md`
+
+## References
+
+See [references.md](references.md) for the external sources used in the public-facing documentation.
