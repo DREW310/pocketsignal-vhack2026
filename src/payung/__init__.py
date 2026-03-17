@@ -1,7 +1,14 @@
-"""PocketSignal core toolkit.
+"""PocketSignal core toolkit for Team Cache Me.
 
-The internal package name remains `payung` for compatibility with earlier
-artifacts, while the public product name is PocketSignal.
+Public-facing name:
+- PocketSignal
+
+Internal Python package name:
+- payung
+
+The package name stays `payung` so the current serialized model bundle and
+existing imports keep working consistently across training, API serving, and
+demo scripts.
 """
 
 __all__ = [

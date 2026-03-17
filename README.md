@@ -103,6 +103,7 @@ Example fast local wording:
 
 ## Repository structure
 
+- `src/payung/`: PocketSignal's internal Python package name. It remains `payung` for model-bundle compatibility, but the public product name is PocketSignal.
 - `config.yaml`: centralized data, model, routing, and LLM configuration
 - `src/payung/preprocess.py`: data merge + engineered features + feature store
 - `src/payung/modeling.py`: training, calibration, threshold optimization, evaluation
