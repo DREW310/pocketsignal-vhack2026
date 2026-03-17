@@ -41,16 +41,16 @@ def fallback_flag_message(
     if normalized == "bahasa_melayu":
         if low_literacy:
             return "Kami nampak transaksi luar biasa. Adakah ini anda? Balas YA atau TIDAK."
-        amt_text = "transaksi ini" if transaction_amt is None else f"transaksi bernilai {transaction_amt:.2f}"
+        transaction_text = "transaksi ini" if transaction_amt is None else f"transaksi RM{transaction_amt:.2f} ini"
         return (
-            f"Kami nampak aktiviti luar biasa pada {amt_text}. "
-            "Adakah anda yang buat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat."
+            f"Kami mengesan aktiviti luar biasa pada {transaction_text}. "
+            "Adakah anda yang melakukan transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat."
         )
     if low_literacy:
         return "We saw an unusual payment. Did you make it? Reply YES or NO."
-    amt_text = "this payment" if transaction_amt is None else f"this payment of {transaction_amt:.2f}"
+    transaction_text = "this transaction" if transaction_amt is None else f"this RM{transaction_amt:.2f} transaction"
     return (
-        f"We noticed unusual activity on {amt_text}. "
+        f"We noticed unusual activity on {transaction_text}. "
         "Did you make this transaction? Reply YES to confirm or NO to block it."
     )
 
@@ -66,7 +66,16 @@ def clean_generated_message(message: str) -> str:
         "here's a possible message:",
         "here is a friendly message:",
         "here's a friendly message:",
+        "here is a possible confirmation message:",
+        "here's a possible confirmation message:",
+        "here is a friendly confirmation message:",
+        "here's a friendly confirmation message:",
+        "here is a confirmation message:",
+        "here's a confirmation message:",
         "possible message:",
+        "possible confirmation message:",
+        "friendly confirmation message:",
+        "confirmation message:",
         "message:",
     )
     lowered = text.lower()
@@ -76,11 +85,59 @@ def clean_generated_message(message: str) -> str:
             lowered = text.lower()
             break
 
+    text = re.split(r"(?i)\b(?:translation|note|explanation|meaning)\s*:", text, maxsplit=1)[0].strip()
+    text = re.split(r"(?i)\b(?:terjemahan|nota)\s*:", text, maxsplit=1)[0].strip()
     text = text.strip().strip('"').strip("'").strip()
     text = re.sub(r"^```[a-zA-Z0-9_-]*", "", text).strip()
     text = re.sub(r"```$", "", text).strip()
     text = re.sub(r"\s+", " ", text)
     return text
+
+
+def should_use_fallback_message(message: str, language: str | None) -> bool:
+    """Reject richer output when it still contains meta text or wrong-language scaffolding."""
+    text = str(message or "").strip()
+    if not text:
+        return True
+
+    lowered = text.lower()
+    meta_markers = (
+        "translation:",
+        "note:",
+        "explanation:",
+        "meaning:",
+        "possible confirmation message",
+        "friendly confirmation message",
+        "here is a ",
+        "here's a ",
+    )
+    if any(marker in lowered for marker in meta_markers):
+        return True
+
+    normalized = normalize_language(language)
+    if normalized == "bahasa_melayu":
+        english_markers = (
+            "hello",
+            "did you",
+            "reply yes",
+            "reply no",
+            "payment",
+            "transaction of",
+            "we noticed",
+            "we want",
+        )
+        if any(marker in lowered for marker in english_markers):
+            return True
+        malay_markers = ("adakah", "transaksi", "balas", "anda", "sahkan", "sekat", "luar biasa", "kami")
+        return not any(marker in lowered for marker in malay_markers)
+
+    if lowered.startswith("you "):
+        return True
+    if "did you" not in lowered:
+        return True
+    if "yes" not in lowered or "no" not in lowered:
+        return True
+    return False
 
 
 class OllamaClient:
@@ -165,6 +222,11 @@ class OllamaClient:
     ) -> str:
         """Build the richer local wording prompt without exposing raw feature names to the user."""
         amt_text = "unknown amount" if transaction_amt is None else f"{transaction_amt:.2f}"
+        transaction_phrase_en = (
+            "this transaction"
+            if transaction_amt is None
+            else f"this RM{transaction_amt:.2f} transaction"
+        )
         feature_text = ", ".join(top_features) if top_features else "transaction behavior"
         normalized = normalize_language(language)
         if normalized == "bahasa_melayu":
@@ -176,17 +238,21 @@ class OllamaClient:
                 f"Write a friendly, 2-sentence chat confirmation message in {reading_level} Bahasa Melayu. "
                 "Ask whether the user made the transaction, avoid technical feature names, "
                 "and use only short, clear wording that a lower-digital-literacy user can understand. "
-                "Return only the message text, with no introduction, label, quotation marks, or bullet points."
+                "Do not include any English sentence, translation, explanation, note, label, quotation marks, or bullet points. "
+                "Return only the final Malay message."
             )
         reading_level = "very simple" if low_literacy else "simple"
         return (
             "You are a digital wallet assistant. "
             f"A transaction of {amt_text} is flagged. "
             f"Human-readable risk reasons are {feature_text}. "
-            f"Write a friendly, 2-sentence chat confirmation message in {reading_level} English "
-            "asking the wallet user if they made this transaction. Avoid technical feature names. "
-            "Use short sentences and a direct YES or NO confirmation ask. "
-            "Return only the message text, with no introduction, label, quotation marks, or bullet points."
+            f"Write exactly 2 complete sentences in {reading_level} English. "
+            "Use a friendly but professional tone. "
+            f"Sentence 1 must start with 'We noticed unusual activity on {transaction_phrase_en}.' "
+            "Sentence 2 must ask if the user made the transaction and say 'Reply YES to confirm or NO to block it.' "
+            "Avoid technical feature names. "
+            "Do not include any introduction, label, quotation marks, translation, explanation, note, or bullet points. "
+            "Return only the final message."
         )
 
     def explain_flag(
@@ -197,6 +263,14 @@ class OllamaClient:
         low_literacy: bool = False,
     ) -> str:
         """Return a richer local message when available, otherwise fall back deterministically."""
+        normalized = normalize_language(language)
+        if low_literacy or normalized == "bahasa_melayu":
+            return fallback_flag_message(
+                language=language,
+                transaction_amt=transaction_amt,
+                low_literacy=low_literacy,
+            )
+
         prompt = self.build_flag_prompt(
             transaction_amt=transaction_amt,
             top_features=top_features,
@@ -206,7 +280,7 @@ class OllamaClient:
         message = self.generate(prompt)
         if message:
             cleaned = clean_generated_message(message)
-            if cleaned:
+            if cleaned and not should_use_fallback_message(cleaned, normalized):
                 return cleaned
         return fallback_flag_message(
             language=language,

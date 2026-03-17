@@ -1,4 +1,4 @@
-"""PocketSignal demo dashboard for Team Cache Me.
+"""PocketSignal demo dashboard.
 
 This UI is intentionally demo-first:
 - exact saved cases are the main judging path
@@ -141,12 +141,12 @@ def confirmation_copy(language: str, action: str, low_literacy: bool) -> tuple[s
     if action == "confirm":
         if normalized == "bahasa_melayu":
             return (
-                "Pengguna sahkan",
+                "YA",
                 "YA, ini transaksi saya.",
                 "Disahkan oleh pengguna. Transaksi boleh diteruskan.",
             )
         return (
-            "User confirms",
+            "YES",
             "YES, this was my payment.",
             "Confirmed by user. The transaction can continue.",
         )
@@ -154,13 +154,13 @@ def confirmation_copy(language: str, action: str, low_literacy: bool) -> tuple[s
     if normalized == "bahasa_melayu":
         detail = "Sekat dan semak secara manual." if low_literacy else "Transaksi disekat dan dihantar untuk semakan manual."
         return (
-            "Pengguna tolak",
+            "TIDAK",
             "TIDAK, sekat transaksi ini.",
             detail,
         )
     detail = "Blocked and sent for manual review." if low_literacy else "Blocked after denial and escalated to manual review."
     return (
-        "User denies",
+        "NO",
         "NO, block this payment.",
         detail,
     )
@@ -206,22 +206,17 @@ def resolve_latest_recovery(action: str) -> None:
 
 def render_phone(recoveries: list[dict], latest_status: str | None) -> None:
     st.markdown("### Customer Recovery")
-    st.caption("This panel keeps the latest flagged conversation even if the newest decision becomes Approve or Block.")
+    st.caption("Flagged transactions appear here with the latest confirmation message.")
     st.markdown("<div class='phone-shell'><div class='phone-header'>PocketSignal Assist</div>", unsafe_allow_html=True)
 
     if not recoveries:
         st.markdown(
-            "<div class='phone-body'><div class='bubble bot'>No flagged conversations yet.</div></div>",
+            "<div class='phone-body'><div class='bubble bot'>No flagged payment yet.</div></div>",
             unsafe_allow_html=True,
         )
     else:
         latest_flag = recoveries[-1]
-        meta = (
-            f"Latest flagged case: TransactionID {latest_flag.get('transaction_id', 'unknown')}, "
-            f"risk {latest_flag.get('risk_score', 'n/a')}"
-        )
-        if latest_status and latest_status != "Flag":
-            meta += " (left board may now show a different route)"
+        meta = f"Flagged transaction {latest_flag.get('transaction_id', 'unknown')}"
         bubbles = [f"<div class='chat-meta'>{escape(meta)}</div>"]
         for msg in latest_flag.get("messages", [])[-6:]:
             speaker = str(msg.get("speaker", "assistant"))
@@ -249,7 +244,7 @@ def render_phone(recoveries: list[dict], latest_status: str | None) -> None:
                 if st.button(deny_label, use_container_width=True, key=f"deny_{latest_flag.get('transaction_id')}"):
                     resolve_latest_recovery("deny")
                     st.rerun()
-            st.caption("This makes the recovery loop explicit: the user can confirm the payment or deny it and force a block plus manual review.")
+            st.caption("Choose how the user responds to complete the recovery check.")
         else:
             st.success(str(latest_flag.get("resolution_state", "Resolved")))
     st.markdown("</div>", unsafe_allow_html=True)
@@ -300,7 +295,7 @@ def submit_payload(payload: dict) -> None:
 
 
 def response_profile_value(selection: str) -> str:
-    return "fast_route" if selection == "Faster wording" else "judge_demo"
+    return "fast_route" if selection == "Fast wording" else "judge_demo"
 
 
 def apply_theme() -> None:
@@ -314,7 +309,7 @@ def apply_theme() -> None:
   --panel: rgba(9, 20, 28, 0.84);
   --line: rgba(244, 194, 96, 0.16);
   --copy: #f5efe5;
-  --muted: #b8b4aa;
+  --muted: #d4ccbf;
   --accent: #f4c260;
 }
 
@@ -337,7 +332,8 @@ def apply_theme() -> None:
 }
 
 h1, h2, h3 {
-  font-family: "Baskerville", "Palatino Linotype", serif;
+  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  font-weight: 700;
 }
 
 .hero {
@@ -365,8 +361,9 @@ h1, h2, h3 {
 .hero-copy {
   margin: 0.8rem 0 0.9rem 0;
   max-width: 920px;
-  color: var(--muted);
+  color: #e7dfd0;
   font-size: 1rem;
+  line-height: 1.55;
 }
 
 .summary-strip {
@@ -381,7 +378,7 @@ h1, h2, h3 {
   border-radius: 999px;
   padding: 8px 12px;
   background: rgba(255,255,255,0.03);
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   color: #efe7d6;
 }
 
@@ -479,8 +476,8 @@ h1, h2, h3 {
 }
 
 .chat-meta {
-  color: #94a3b8;
-  font-size: 12px;
+  color: #c7d2dd;
+  font-size: 13px;
   margin-bottom: 10px;
 }
 
@@ -516,6 +513,24 @@ div[data-testid="stButton"] > button:hover {
   border-color: rgba(244, 194, 96, 0.48);
 }
 
+label, [data-testid="stWidgetLabel"], [data-testid="stMarkdownContainer"] p,
+div[data-testid="stCaptionContainer"] p, div[role="radiogroup"] label {
+  color: #efe7d6 !important;
+}
+
+div[data-testid="stCaptionContainer"] p {
+  color: var(--muted) !important;
+}
+
+div[data-testid="stMarkdownContainer"] p {
+  line-height: 1.55;
+}
+
+div[data-baseweb="select"] input,
+div[data-baseweb="select"] div {
+  font-size: 1rem;
+}
+
 @media (max-width: 900px) {
   .hero-title {
     font-size: 2.35rem;
@@ -544,7 +559,6 @@ def main() -> None:
     st.markdown(
         f"""
 <div class='hero'>
-  <div class='eyebrow'>Team Cache Me</div>
   <h1 class='hero-title'>PocketSignal</h1>
   <div class='hero-copy'>
     Privacy-first fraud triage for digital wallets serving unbanked and low-confidence users.
@@ -554,7 +568,7 @@ def main() -> None:
     <div class='summary-pill'>ROC-AUC: <strong>{escape(metrics.get('roc_auc', 'n/a'))}</strong></div>
     <div class='summary-pill'>Block precision: <strong>{escape(metrics.get('block_precision', 'n/a'))}</strong></div>
     <div class='summary-pill'>Approve fraud rate: <strong>{escape(metrics.get('approve_fraud_rate', 'n/a'))}</strong></div>
-    <div class='summary-pill'>Local recovery: <strong>richer or faster wording</strong></div>
+    <div class='summary-pill'>Local recovery: <strong>on-device confirmation</strong></div>
   </div>
 </div>
         """,
@@ -565,15 +579,15 @@ def main() -> None:
 
     with left_col:
         st.markdown("### Demo Console")
-        st.caption("Use exact saved cases during judging. Manual test is only for ad-hoc checks.")
+        st.caption("Run a saved case to show each route clearly.")
         if st.session_state.last_error:
             st.error(st.session_state.last_error)
 
         response_profile_label = st.radio(
-            "Recovery message mode",
-            options=["Richer wording", "Faster wording"],
+            "Message style",
+            options=["Natural wording", "Fast wording"],
             horizontal=True,
-            help="Richer wording uses local Ollama text generation. Faster wording uses a deterministic local template for lower latency.",
+            help="Natural wording uses local text generation when available. Fast wording uses a stable local template.",
         )
         message_language = st.selectbox(
             "Message language",
@@ -606,12 +620,7 @@ def main() -> None:
                     st.session_state.last_error = str(exc)
                     st.rerun()
 
-        st.caption(
-            "Recommended live order: Approve -> Flag -> Block. "
-            f"Current Flag mode: {response_profile_label}."
-        )
-
-        with st.expander("Manual test", expanded=False):
+        with st.expander("Optional custom input", expanded=False):
             with st.form("txn_form"):
                 transaction_amt = st.number_input("TransactionAmt", min_value=0.0, value=120.5)
                 transaction_dt = st.number_input("TransactionDT", min_value=0, value=86400)

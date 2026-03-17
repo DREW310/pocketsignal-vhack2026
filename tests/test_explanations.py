@@ -16,6 +16,8 @@ from payung.llm import (
     fallback_flag_message,
     normalize_language,
     normalize_response_profile,
+    OllamaClient,
+    should_use_fallback_message,
 )
 
 
@@ -52,6 +54,47 @@ class ExplanationTests(unittest.TestCase):
         self.assertEqual(
             clean_generated_message(raw),
             "Hey! We noticed a transaction for $100.00. Did you make it?",
+        )
+        wrapped = (
+            'Here is a friendly confirmation message:\n'
+            '"Hey! We noticed a recent transaction of $100.00. Did you make this purchase?"\n'
+            'Translation: "..."'
+        )
+        self.assertEqual(
+            clean_generated_message(wrapped),
+            "Hey! We noticed a recent transaction of $100.00. Did you make this purchase?",
+        )
+
+    def test_generated_message_falls_back_when_meta_or_wrong_language_leaks_in(self) -> None:
+        self.assertTrue(
+            should_use_fallback_message(
+                'Assalamualaikum! Kami mahu memastikan transaksi ini. Translation: "..."',
+                "Bahasa Melayu",
+            )
+        )
+        self.assertTrue(
+            should_use_fallback_message(
+                "Here is a friendly confirmation message: Did you make this payment?",
+                "English",
+            )
+        )
+
+    def test_low_literacy_and_bahasa_melayu_use_curated_local_message(self) -> None:
+        class DummyClient(OllamaClient):
+            def __init__(self) -> None:
+                super().__init__("http://127.0.0.1:11434", "llama3", timeout_seconds=0.1)
+
+            def generate(self, prompt: str) -> str:
+                return 'Here is a friendly confirmation message: "Hello! Did you make this payment?"'
+
+        client = DummyClient()
+        self.assertEqual(
+            client.explain_flag(100.0, ["unusual amount pattern"], language="Bahasa Melayu", low_literacy=False),
+            "Kami mengesan aktiviti luar biasa pada transaksi RM100.00 ini. Adakah anda yang melakukan transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat.",
+        )
+        self.assertEqual(
+            client.explain_flag(100.0, ["unusual amount pattern"], language="English", low_literacy=True),
+            "We saw an unusual payment. Did you make it? Reply YES or NO.",
         )
 
 

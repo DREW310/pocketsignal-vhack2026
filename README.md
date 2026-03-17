@@ -175,12 +175,12 @@ python3 scripts/train.py --sample-frac 0.10 --safe-mode
 python3 scripts/run_ablation.py --sample-frac 0.05
 ```
 
-### 5. Install Ollama for richer local wording mode
+### 5. Install Ollama for natural local wording mode
 ```bash
 ollama pull llama3
 ```
 
-Lighter local richer-wording benchmarks for future work:
+Lighter local natural-wording benchmarks for future work:
 - `ollama pull llama3.2:1b`
 - `ollama pull qwen2.5:1.5b`
 
@@ -248,7 +248,7 @@ That makes the recovery flow visible instead of leaving it as a static message b
 - input: transaction feature JSON (`TransactionAmt`, `card1`, `DeviceInfo`, ...)
 - optional fields:
   - `preferred_language`: `English | Bahasa Melayu`
-  - `response_profile`: richer local wording (`judge_demo`) or faster local wording (`fast_route`)
+  - `response_profile`: natural local wording (`judge_demo`) or fast local wording (`fast_route`)
   - `low_literacy`: `true | false`
 - output:
   - `status`: `Approve | Flag | Block`
