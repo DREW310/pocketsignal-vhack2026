@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-03-10T14:45:40.979805+00:00",
+  "config_path": "/Users/drewdo/Downloads/Varsity_Hackathon_2026/config.yaml",
+  "sample_frac": 1.0,
+  "rows": 590540,
+  "metrics": {
+    "roc_auc": 0.900588456137388,
+    "pr_auc": 0.5007131722377514,
+    "brier": 0.02379271081918891,
+    "precision_block": 0.9255499153976311,
+    "recall_block": 0.1345964566929134,
+    "false_positive_rate_block": 0.00038581600084178035,
+    "approve_fraud_rate": 0.0016933751858582522,
+    "thresholds": {
+      "approve_threshold": 21,
+      "block_threshold": 99
+    },
+    "confusion_matrix_block": {
+      "tn": 114000,
+      "fp": 44,
+      "fn": 3517,
+      "tp": 547
+    },
+    "route_distribution": {
+      "Approve": 24212,
+      "Flag": 93305,
+      "Block": 591
+    }
+  },
+  "training_summary": {
+    "train_rows": 413378,
+    "calib_rows": 59054,
+    "valid_rows": 118108,
+    "positive_rate_train": 0.03516878014795175,
+    "positive_rate_valid": 0.034409184813899145,
+    "model_names": [
+      "lightgbm",
+      "catboost"
+    ]
+  },
+  "thresholds": {
+    "approve_threshold": 21,
+    "block_threshold": 99
+  },
+  "seed": 2026
+}

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+# Build and local runtime
+artifacts/*.json
+artifacts/*.csv
+reports/*.json
+reports/*.log
+catboost_info/
+!reports/metrics.json
+!reports/demo_cases.json
+!reports/ablation_report.json
+
+# Streamlit
+.streamlit/
+
+# Local skill sandbox / unrelated scratch material
+skills/
+reports/citic*
+reports/aip_template_text.txt
+reports/source_checks/
+reports/latency_report.md
+
+# macOS
+.DS_Store
+
+# Kaggle raw data and large local files
+train_transaction.csv
+train_identity.csv
+test_transaction.csv
+test_identity.csv
+sample_submission.csv
+
+# Keep the trained bundle for judge-side demo runs
+!artifacts/model_bundle.pkl

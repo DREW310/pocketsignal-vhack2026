@@ -1,0 +1,90 @@
+{
+  "generated_at": "2026-03-10T13:41:17.263408+00:00",
+  "sample_frac": 0.05,
+  "variants": [
+    {
+      "name": "baseline_no_graph_no_balance",
+      "metrics": {
+        "roc_auc": 0.8429040139616055,
+        "pr_auc": 0.41051481472281315,
+        "brier": 0.02328836776508329,
+        "precision_block": 0.8666666666666667,
+        "recall_block": 0.14857142857142858,
+        "false_positive_rate_block": 0.0006980802792321117,
+        "approve_fraud_rate": 0.00402067777139575,
+        "thresholds": {
+          "approve_threshold": 30,
+          "block_threshold": 99
+        },
+        "confusion_matrix_block": {
+          "tn": 5726,
+          "fp": 4,
+          "fn": 149,
+          "tp": 26
+        },
+        "route_distribution": {
+          "Approve": 1741,
+          "Flag": 4134,
+          "Block": 30
+        }
+      },
+      "notes": "No graph features, no imbalance handling, no ensemble."
+    },
+    {
+      "name": "plus_imbalance_no_graph",
+      "metrics": {
+        "roc_auc": 0.8332944402892046,
+        "pr_auc": 0.4064361122992218,
+        "brier": 0.022517260592270955,
+        "precision_block": 0.8333333333333334,
+        "recall_block": 0.14285714285714285,
+        "false_positive_rate_block": 0.0008726003490401396,
+        "approve_fraud_rate": 0.003986710963455149,
+        "thresholds": {
+          "approve_threshold": 26,
+          "block_threshold": 99
+        },
+        "confusion_matrix_block": {
+          "tn": 5725,
+          "fp": 5,
+          "fn": 150,
+          "tp": 25
+        },
+        "route_distribution": {
+          "Approve": 1505,
+          "Flag": 4370,
+          "Block": 30
+        }
+      },
+      "notes": "Added class imbalance handling only."
+    },
+    {
+      "name": "full_graph_plus_ensemble",
+      "metrics": {
+        "roc_auc": 0.8683849414111195,
+        "pr_auc": 0.40542083730843764,
+        "brier": 0.02181583615883121,
+        "precision_block": 0.8666666666666667,
+        "recall_block": 0.14857142857142858,
+        "false_positive_rate_block": 0.0006980802792321117,
+        "approve_fraud_rate": 0.003604902667627974,
+        "thresholds": {
+          "approve_threshold": 24,
+          "block_threshold": 99
+        },
+        "confusion_matrix_block": {
+          "tn": 5726,
+          "fp": 4,
+          "fn": 149,
+          "tp": 26
+        },
+        "route_distribution": {
+          "Approve": 1387,
+          "Flag": 4488,
+          "Block": 30
+        }
+      },
+      "notes": "Graph features + imbalance + optional ensemble."
+    }
+  ]
+}

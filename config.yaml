@@ -1,0 +1,89 @@
+project_name: payung
+seed: 2026
+
+data:
+  train_transaction: train_transaction.csv
+  train_identity: train_identity.csv
+  test_transaction: test_transaction.csv
+  test_identity: test_identity.csv
+  sample_frac: 0.10
+  sample_strategy: chunk_sample
+  target_col: isFraud
+  id_col: TransactionID
+  time_col: TransactionDT
+
+features:
+  categorical:
+    - ProductCD
+    - card1
+    - card2
+    - card3
+    - card4
+    - card5
+    - card6
+    - addr1
+    - addr2
+    - P_emaildomain
+    - R_emaildomain
+    - DeviceType
+    - DeviceInfo
+  graph:
+    use_networkx: true
+    pairs:
+      - right_col: DeviceInfo
+        feature_name: card1_device_degree
+      - right_col: P_emaildomain
+        feature_name: card1_email_degree
+
+model:
+  valid_frac: 0.20
+  calib_frac: 0.10
+  class_weight_mode: scale_pos_weight
+  use_lightgbm: true
+  enable_catboost_ensemble: true
+  lightgbm:
+    n_estimators: 500
+    learning_rate: 0.05
+    num_leaves: 64
+    subsample: 0.80
+    colsample_bytree: 0.80
+    reg_alpha: 0.0
+    reg_lambda: 0.0
+    random_state: 2026
+  catboost:
+    iterations: 400
+    learning_rate: 0.05
+    depth: 6
+    loss_function: Logloss
+    verbose: false
+    random_seed: 2026
+  calibrator_method: platt
+  logistic_fallback:
+    solver: liblinear
+    max_iter: 2000
+    C: 1.0
+    random_state: 2026
+
+routing:
+  approve_threshold: 70
+  block_threshold: 90
+  optimize_thresholds: true
+  target_block_fpr: 0.01
+  target_approve_fraud_rate: 0.005
+  min_approve_share: 0.20
+  min_flag_share: 0.02
+  min_block_share: 0.002
+
+llm:
+  enabled: true
+  base_url: http://127.0.0.1:11434
+  model: llama3
+  timeout_seconds: 1.0
+
+artifacts:
+  dir: artifacts
+  model_bundle: artifacts/model_bundle.pkl
+  metrics_json: reports/metrics.json
+  metrics_md: reports/metrics_report.md
+  ablation_md: reports/ablation_report.md
+  latency_md: reports/latency_report.md
