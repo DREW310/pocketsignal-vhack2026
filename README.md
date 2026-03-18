@@ -183,6 +183,16 @@ python3 scripts/run_ablation.py --sample-frac 0.05
 ollama pull llama3
 ```
 
+Before recording or demoing, check the exact local model tag:
+```bash
+ollama list
+```
+
+If your machine does not have a model named exactly `llama3`, set the backend model tag explicitly to match your local Ollama installation. Example:
+```bash
+POCKETSIGNAL_OLLAMA_MODEL=llama3.1:8b
+```
+
 Lighter local natural-wording benchmarks for future work:
 - `ollama pull llama3.2:1b`
 - `ollama pull qwen2.5:1.5b`
@@ -200,12 +210,14 @@ POCKETSIGNAL_RESPONSE_PROFILE=fast_route
 POCKETSIGNAL_OLLAMA_KEEP_ALIVE=10m
 POCKETSIGNAL_OLLAMA_PRELOAD=1
 POCKETSIGNAL_OLLAMA_TIMEOUT=8
+POCKETSIGNAL_OLLAMA_MODEL=llama3
 ```
 
 Windows PowerShell:
 ```powershell
 $env:PYTHONPATH="src"
 $env:POCKETSIGNAL_OLLAMA_TIMEOUT="8"
+$env:POCKETSIGNAL_OLLAMA_MODEL="llama3"
 py -3 -m uvicorn apps.fastapi_app:app --host 0.0.0.0 --port 8000
 ```
 

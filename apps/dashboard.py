@@ -21,7 +21,7 @@ from urllib.request import Request, urlopen
 import streamlit as st
 
 DEFAULT_API_PREDICT_URL = "http://127.0.0.1:8000/predict"
-FRONTEND_HTTP_TIMEOUT_SECONDS = 8.0
+FRONTEND_HTTP_TIMEOUT_SECONDS = 15.0
 ROOT = Path(__file__).resolve().parents[1]
 DEMO_CASES_PATH = ROOT / "reports" / "demo_cases.json"
 METRICS_PATH = ROOT / "reports" / "metrics.json"
