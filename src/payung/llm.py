@@ -31,6 +31,34 @@ def normalize_response_profile(profile: str | None) -> str:
     return "judge_demo"
 
 
+def localize_risk_reasons(top_features: Sequence[str], language: str | None) -> str:
+    """Translate presentation-safe risk reasons into the target demo language."""
+    normalized = normalize_language(language)
+    labels = [str(feature or "").strip() for feature in top_features if str(feature or "").strip()]
+    if not labels:
+        return "transaction behavior" if normalized == "english" else "corak transaksi"
+    if normalized != "bahasa_melayu":
+        return ", ".join(labels)
+
+    reason_map = {
+        "unusual amount pattern": "corak jumlah yang luar biasa",
+        "payment card pattern": "corak kad pembayaran yang luar biasa",
+        "historical activity pattern": "corak aktiviti lepas yang luar biasa",
+        "shared fraud network linkage": "hubungan rangkaian yang mencurigakan",
+        "unusual transaction timing": "masa transaksi yang luar biasa",
+        "unusual device or browser context": "peranti atau pelayar yang tidak biasa",
+        "email identity mismatch": "padanan e-mel yang mencurigakan",
+        "location or address anomaly": "lokasi atau alamat yang luar biasa",
+        "timing or account age pattern": "masa atau umur akaun yang luar biasa",
+        "identity consistency signal": "isyarat identiti yang tidak sepadan",
+        "transaction consistency signal": "corak transaksi yang tidak konsisten",
+        "identity verification context": "konteks pengesahan identiti",
+        "transaction behavior signal": "corak transaksi",
+    }
+    localized = [reason_map.get(label, "corak transaksi") for label in labels]
+    return ", ".join(localized)
+
+
 def fallback_flag_message(
     language: str | None,
     transaction_amt: float | None = None,
@@ -144,8 +172,6 @@ def should_use_fallback_message(message: str, language: str | None) -> bool:
 
     if lowered.startswith("you "):
         return True
-    if "did you" not in lowered:
-        return True
     if "yes" not in lowered or "no" not in lowered:
         return True
     return False
@@ -233,8 +259,8 @@ class OllamaClient:
     ) -> str:
         """Build the richer local wording prompt without exposing raw feature names to the user."""
         amt_text = "unknown amount" if transaction_amt is None else f"{transaction_amt:.2f}"
-        feature_text = ", ".join(top_features) if top_features else "transaction behavior"
         normalized = normalize_language(language)
+        feature_text = localize_risk_reasons(top_features, normalized)
         if normalized == "bahasa_melayu":
             reading_level = "extremely simple" if low_literacy else "very simple"
             transaction_phrase_ms = (
@@ -245,12 +271,13 @@ class OllamaClient:
             return (
                 "You are a digital wallet security assistant for a Malaysian user. "
                 f"A transaction of {amt_text} is flagged. "
-                f"Risk reasons: {feature_text}. "
+                f"Risk reason: {feature_text}. "
                 f"Write exactly 2 complete sentences in {reading_level} local Malaysian Bahasa Melayu (strictly NOT Bahasa Indonesia). "
                 "Use a friendly but professional tone. "
-                f"Sentence 1 must state 'Kami mengesan aktiviti luar biasa pada {transaction_phrase_ms}.' "
-                "Sentence 2 must ask if they made the transaction and strictly instruct them to 'Balas YA untuk sahkan atau TIDAK untuk sekat.' "
+                f"Sentence 1 must inform the user about unusual activity on {transaction_phrase_ms} and naturally mention the risk reason in Malay. "
+                "Sentence 2 must ask if they made the transaction and strictly end with 'Balas YA untuk sahkan atau TIDAK untuk sekat.' "
                 "Ensure the word 'anda' is lowercase unless it starts a sentence. "
+                "Do not use the word 'Apakah'; use 'Adakah' instead. "
                 "Avoid technical feature names. "
                 "Do not include any English words, translation, explanation, note, label, quotation marks, or bullet points. "
                 "Return ONLY the final 2-sentence Malay message."
@@ -264,10 +291,10 @@ class OllamaClient:
         return (
             "You are a digital wallet assistant. "
             f"A transaction of {amt_text} is flagged. "
-            f"Human-readable risk reasons are {feature_text}. "
+            f"Risk reason: {feature_text}. "
             f"Write exactly 2 complete sentences in {reading_level} English. "
             "Use a friendly but professional tone. "
-            f"Sentence 1 must start with 'We noticed unusual activity on {transaction_phrase_en}.' "
+            f"Sentence 1 must inform the user about unusual activity on {transaction_phrase_en} and naturally mention the risk reason. "
             "Sentence 2 must ask if the user made the transaction and say 'Reply YES to confirm or NO to block it.' "
             "Avoid technical feature names. "
             "Do not include any introduction, label, quotation marks, translation, explanation, note, or bullet points. "

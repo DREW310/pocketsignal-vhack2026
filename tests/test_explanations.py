@@ -14,6 +14,7 @@ from payung.inference import friendly_feature_reason, parse_low_literacy
 from payung.llm import (
     clean_generated_message,
     fallback_flag_message,
+    localize_risk_reasons,
     normalize_language,
     normalize_response_profile,
     OllamaClient,
@@ -27,6 +28,13 @@ class ExplanationTests(unittest.TestCase):
         self.assertEqual(friendly_feature_reason("card1"), "payment card pattern")
         self.assertEqual(friendly_feature_reason("C1"), "historical activity pattern")
         self.assertEqual(friendly_feature_reason("card1_device_degree"), "shared fraud network linkage")
+        self.assertEqual(
+            localize_risk_reasons(
+                ["payment card pattern", "historical activity pattern", "unusual amount pattern"],
+                "Bahasa Melayu",
+            ),
+            "corak kad pembayaran yang luar biasa, corak aktiviti lepas yang luar biasa, corak jumlah yang luar biasa",
+        )
 
     def test_language_normalization_and_fallback(self) -> None:
         self.assertEqual(normalize_language("bm"), "bahasa_melayu")
@@ -86,6 +94,12 @@ class ExplanationTests(unittest.TestCase):
         self.assertTrue(
             should_use_fallback_message(
                 "Here is a friendly confirmation message: Did you make this payment?",
+                "English",
+            )
+        )
+        self.assertFalse(
+            should_use_fallback_message(
+                "We noticed unusual activity linked to a new device. Was this you? Reply YES to confirm or NO to block it.",
                 "English",
             )
         )
