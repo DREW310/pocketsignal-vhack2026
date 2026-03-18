@@ -64,6 +64,11 @@ class ExplanationTests(unittest.TestCase):
             clean_generated_message(wrapped),
             "Hey! We noticed a recent transaction of $100.00. Did you make this purchase?",
         )
+        wrapped_bm = 'Berikut adalah mesej: "Adakah Anda yang membuat transaksi ini? Balas YA atau TIDAK."'
+        self.assertEqual(
+            clean_generated_message(wrapped_bm),
+            "Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK.",
+        )
 
     def test_generated_message_falls_back_when_meta_or_wrong_language_leaks_in(self) -> None:
         self.assertTrue(
@@ -74,12 +79,18 @@ class ExplanationTests(unittest.TestCase):
         )
         self.assertTrue(
             should_use_fallback_message(
+                "Kami mahu mengesahkan transaksi ini.",
+                "Bahasa Melayu",
+            )
+        )
+        self.assertTrue(
+            should_use_fallback_message(
                 "Here is a friendly confirmation message: Did you make this payment?",
                 "English",
             )
         )
 
-    def test_low_literacy_and_bahasa_melayu_use_curated_local_message(self) -> None:
+    def test_low_literacy_still_uses_curated_template(self) -> None:
         class DummyClient(OllamaClient):
             def __init__(self) -> None:
                 super().__init__("http://127.0.0.1:11434", "llama3", timeout_seconds=0.1)
@@ -89,12 +100,26 @@ class ExplanationTests(unittest.TestCase):
 
         client = DummyClient()
         self.assertEqual(
-            client.explain_flag(100.0, ["unusual amount pattern"], language="Bahasa Melayu", low_literacy=False),
-            "Kami mengesan transaksi RM100.00 yang luar biasa. Adakah anda yang membuat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat.",
-        )
-        self.assertEqual(
             client.explain_flag(100.0, ["unusual amount pattern"], language="English", low_literacy=True),
             "We saw an unusual payment. Did you make it? Reply YES or NO.",
+        )
+
+    def test_bahasa_melayu_natural_wording_uses_clean_llm_output(self) -> None:
+        class DummyClient(OllamaClient):
+            def __init__(self) -> None:
+                super().__init__("http://127.0.0.1:11434", "llama3", timeout_seconds=0.1)
+
+            def generate(self, prompt: str) -> str:
+                return (
+                    'Berikut adalah mesej: '
+                    '"Kami mengesan aktiviti luar biasa pada transaksi RM100.00 ini. '
+                    'Adakah anda yang membuat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat."'
+                )
+
+        client = DummyClient()
+        self.assertEqual(
+            client.explain_flag(100.0, ["unusual amount pattern"], language="Bahasa Melayu", low_literacy=False),
+            "Kami mengesan aktiviti luar biasa pada transaksi RM100.00 ini. Adakah anda yang membuat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat.",
         )
 
 

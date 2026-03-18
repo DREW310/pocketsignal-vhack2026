@@ -99,7 +99,7 @@ Two local modes are supported:
 Low-literacy mode now changes the wording itself instead of only truncating text.
 Example fast local wording:
 - English: `We saw an unusual payment. Did you make it? Reply YES or NO.`
-- Bahasa Melayu: `Kami nampak transaksi luar biasa. Adakah ini anda? Balas YA atau TIDAK.`
+- Bahasa Melayu: `Kami nampak transaksi luar biasa. Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK.`
 
 ## Repository structure
 

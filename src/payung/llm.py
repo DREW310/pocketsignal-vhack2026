@@ -41,9 +41,9 @@ def fallback_flag_message(
     if normalized == "bahasa_melayu":
         if low_literacy:
             return "Kami nampak transaksi luar biasa. Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK."
-        transaction_text = "transaksi ini" if transaction_amt is None else f"transaksi RM{transaction_amt:.2f}"
+        transaction_text = "transaksi ini" if transaction_amt is None else f"transaksi RM{transaction_amt:.2f} ini"
         return (
-            f"Kami mengesan {transaction_text} yang luar biasa. "
+            f"Kami mengesan aktiviti luar biasa pada {transaction_text}. "
             "Adakah anda yang membuat transaksi ini? Balas YA untuk sahkan atau TIDAK untuk sekat."
         )
     if low_literacy:
@@ -77,6 +77,11 @@ def clean_generated_message(message: str) -> str:
         "friendly confirmation message:",
         "confirmation message:",
         "message:",
+        "berikut adalah mesej:",
+        "berikut adalah cadangan mesej:",
+        "ini adalah mesej:",
+        "cadangan mesej:",
+        "mesej:",
     )
     lowered = text.lower()
     for prefix in prefixes:
@@ -86,11 +91,13 @@ def clean_generated_message(message: str) -> str:
             break
 
     text = re.split(r"(?i)\b(?:translation|note|explanation|meaning)\s*:", text, maxsplit=1)[0].strip()
-    text = re.split(r"(?i)\b(?:terjemahan|nota)\s*:", text, maxsplit=1)[0].strip()
+    text = re.split(r"(?i)\b(?:terjemahan|nota|penjelasan)\s*:", text, maxsplit=1)[0].strip()
     text = text.strip().strip('"').strip("'").strip()
     text = re.sub(r"^```[a-zA-Z0-9_-]*", "", text).strip()
     text = re.sub(r"```$", "", text).strip()
     text = re.sub(r"\s+", " ", text)
+    # Force in-sentence "Anda" back to lowercase when the model ignores the prompt style.
+    text = re.sub(r"(?<!^)(?<![.?!]\s)\bAnda\b", "anda", text)
     return text
 
 
@@ -110,6 +117,8 @@ def should_use_fallback_message(message: str, language: str | None) -> bool:
         "friendly confirmation message",
         "here is a ",
         "here's a ",
+        "ini adalah",
+        "berikut adalah",
     )
     if any(marker in lowered for marker in meta_markers):
         return True
@@ -127,6 +136,8 @@ def should_use_fallback_message(message: str, language: str | None) -> bool:
             "we want",
         )
         if any(marker in lowered for marker in english_markers):
+            return True
+        if "ya" not in lowered or "tidak" not in lowered:
             return True
         malay_markers = ("adakah", "transaksi", "balas", "anda", "sahkan", "sekat", "luar biasa", "kami")
         return not any(marker in lowered for marker in malay_markers)
@@ -222,25 +233,33 @@ class OllamaClient:
     ) -> str:
         """Build the richer local wording prompt without exposing raw feature names to the user."""
         amt_text = "unknown amount" if transaction_amt is None else f"{transaction_amt:.2f}"
+        feature_text = ", ".join(top_features) if top_features else "transaction behavior"
+        normalized = normalize_language(language)
+        if normalized == "bahasa_melayu":
+            reading_level = "extremely simple" if low_literacy else "very simple"
+            transaction_phrase_ms = (
+                "transaksi ini"
+                if transaction_amt is None
+                else f"transaksi RM{transaction_amt:.2f} ini"
+            )
+            return (
+                "You are a digital wallet security assistant for a Malaysian user. "
+                f"A transaction of {amt_text} is flagged. "
+                f"Risk reasons: {feature_text}. "
+                f"Write exactly 2 complete sentences in {reading_level} local Malaysian Bahasa Melayu (strictly NOT Bahasa Indonesia). "
+                "Use a friendly but professional tone. "
+                f"Sentence 1 must state 'Kami mengesan aktiviti luar biasa pada {transaction_phrase_ms}.' "
+                "Sentence 2 must ask if they made the transaction and strictly instruct them to 'Balas YA untuk sahkan atau TIDAK untuk sekat.' "
+                "Ensure the word 'anda' is lowercase unless it starts a sentence. "
+                "Avoid technical feature names. "
+                "Do not include any English words, translation, explanation, note, label, quotation marks, or bullet points. "
+                "Return ONLY the final 2-sentence Malay message."
+            )
         transaction_phrase_en = (
             "this transaction"
             if transaction_amt is None
             else f"this RM{transaction_amt:.2f} transaction"
         )
-        feature_text = ", ".join(top_features) if top_features else "transaction behavior"
-        normalized = normalize_language(language)
-        if normalized == "bahasa_melayu":
-            reading_level = "extremely simple" if low_literacy else "very simple"
-            return (
-                "You are a digital wallet assistant for a Malaysian or ASEAN wallet user. "
-                f"A transaction of {amt_text} is flagged. "
-                f"Human-readable risk reasons are {feature_text}. "
-                f"Write a friendly, 2-sentence chat confirmation message in {reading_level} Bahasa Melayu. "
-                "Ask whether the user made the transaction, avoid technical feature names, "
-                "and use only short, clear wording that a lower-digital-literacy user can understand. "
-                "Do not include any English sentence, translation, explanation, note, label, quotation marks, or bullet points. "
-                "Return only the final Malay message."
-            )
         reading_level = "very simple" if low_literacy else "simple"
         return (
             "You are a digital wallet assistant. "
@@ -264,7 +283,7 @@ class OllamaClient:
     ) -> str:
         """Return a richer local message when available, otherwise fall back deterministically."""
         normalized = normalize_language(language)
-        if low_literacy or normalized == "bahasa_melayu":
+        if low_literacy:
             return fallback_flag_message(
                 language=language,
                 transaction_amt=transaction_amt,
