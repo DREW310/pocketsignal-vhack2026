@@ -95,9 +95,12 @@ Two local modes are supported:
 - **Richer local wording** (`response_profile=judge_demo`): uses Ollama when available for a more natural recovery message
 - **Faster local wording** (`response_profile=fast_route`): uses deterministic local wording for tighter latency
 
+Richer local wording is not trusted blindly. PocketSignal validates the generated text and falls back to the local template if the output is unreliable or poorly localized.
+
 ### 5. Real low-literacy support
 Low-literacy mode now changes the wording itself instead of only truncating text.
-Example fast local wording:
+For clarity and consistency, this mode prioritizes the simplest deterministic local wording rather than free-form generation.
+Example low-literacy wording:
 - English: `We saw an unusual payment. Did you make it? Reply YES or NO.`
 - Bahasa Melayu: `Kami nampak transaksi luar biasa. Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK.`
 

@@ -182,7 +182,7 @@ class OllamaClient:
         self,
         base_url: str,
         model: str,
-        timeout_seconds: float = 1.0,
+        timeout_seconds: float = 5.0,
         keep_alive: str = "10m",
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -310,6 +310,8 @@ class OllamaClient:
     ) -> str:
         """Return a richer local message when available, otherwise fall back deterministically."""
         normalized = normalize_language(language)
+        # Low-literacy mode is intentionally deterministic so the wording stays short,
+        # stable, and easy to understand for the most vulnerable users.
         if low_literacy:
             return fallback_flag_message(
                 language=language,

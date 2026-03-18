@@ -588,13 +588,14 @@ def main() -> None:
             "Message style",
             options=["Natural wording", "Fast wording"],
             horizontal=True,
-            help="Natural wording uses local text generation when available. Fast wording uses a stable local template.",
+            help="Natural wording first tries local generation and falls back to validated local wording if needed. Fast wording always uses the stable local template.",
         )
         message_language = st.selectbox(
             "Message language",
             options=["English", "Bahasa Melayu"],
         )
         literacy_mode = st.toggle("Low-literacy mode", value=True)
+        st.caption("Low-literacy mode prioritizes the simplest local wording for clarity.")
 
         case_cols = st.columns([1.25, 1])
         with case_cols[0]:

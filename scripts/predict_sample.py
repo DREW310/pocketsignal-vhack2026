@@ -29,7 +29,7 @@ def main() -> None:
 
     llm_client = None
     if args.llm:
-        llm_client = OllamaClient(base_url="http://127.0.0.1:11434", model="llama3", timeout_seconds=1.0)
+        llm_client = OllamaClient(base_url="http://127.0.0.1:11434", model="llama3", timeout_seconds=5.0)
 
     sample_payload = {
         "TransactionID": 99000001,
