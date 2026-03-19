@@ -11,27 +11,27 @@ Instead of returning only a fraud score, PocketSignal turns each transaction int
 The main idea is simple: **detect risk, choose the right intervention, and communicate it in a way the user can act on.**
 
 ## Product walkthrough
-Frontend Design:
+**Frontend Design:**
 ![PocketSignal overview](docs/assets/overview.jpg)
 
 
 This overview shows the three calibrated routes. Only the gray-zone `Flag` route activates a recovery step.
 
-### Exact `Approve` route
+### `Approve` route
 
-![Exact Approve route](docs/assets/approve_route.svg)
+![Exact Approve route](docs/assets/approve_route.jpg)
 
 The `Approve` lane keeps legitimate transactions on the fast path with no unnecessary interruption.
 
-### Exact `Flag` route
+### `Flag` route
 
-![Exact Flag route](docs/assets/flag_route.svg)
+![Exact Flag route](docs/assets/flag_route.jpg)
 
 The `Flag` lane now supports a real closed loop: the user can confirm or deny the payment, and the dashboard records the outcome instead of showing a fake static reply.
 
-### Exact `Block` route
+### `Block` route
 
-![Exact Block route](docs/assets/block_route.svg)
+![Exact Block route](docs/assets/block_route.jpg)
 
 The `Block` lane is intentionally narrow so hard intervention is reserved for the highest-confidence fraud cases.
 
