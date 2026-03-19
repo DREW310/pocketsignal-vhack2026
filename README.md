@@ -37,7 +37,7 @@ The `Block` lane is intentionally narrow so hard intervention is reserved for th
 
 ## Architecture
 
-![PocketSignal architecture](docs/assets/architecture.svg)
+![PocketSignal architecture](docs/assets/architecture.jpg)
 
 PocketSignal combines three layers of value:
 1. behavior-aware and graph-aware fraud scoring
