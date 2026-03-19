@@ -12,7 +12,7 @@ The main idea is simple: **detect risk, choose the right intervention, and commu
 
 ## Product walkthrough
 
-![PocketSignal overview](docs/assets/overview.svg)
+![PocketSignal overview](docs/assets/overview.jpg)
 
 This overview shows the three calibrated routes. Only the gray-zone `Flag` route activates a recovery step.
 
