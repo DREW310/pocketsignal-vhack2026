@@ -58,9 +58,6 @@ Current calibrated route mix on the validation split:
 - `Flag`: `42,519` (`36.0%`)
 - `Block`: `1,772` (`1.5%`)
 
-This route mix is materially more operational than the earlier conservative version that pushed too much traffic into the gray zone.
-Not every `Flag` becomes manual review: the current recovery loop can resolve part of the gray zone directly through user confirmation or denial.
-
 ## Key technical choices
 
 ### 1. Behavioral profiling
@@ -83,13 +80,12 @@ It calibrates the score, then maps it into a route that a wallet operator can ac
 ### 4. Local recovery wording
 Only `Flag` transactions trigger recovery wording.
 Two local modes are supported:
-- **Richer local wording** (`response_profile=judge_demo`): uses Ollama when available for a more natural recovery message
-- **Faster local wording** (`response_profile=fast_route`): uses deterministic local wording for tighter latency
+- **Natural wording** (`response_profile=judge_demo`): uses Ollama when available for a more natural recovery message
+- **Fast wording** (`response_profile=fast_route`): uses deterministic local wording for tighter latency
 
-Richer local wording is not trusted blindly. PocketSignal validates the generated text and falls back to the local template if the output is unreliable or poorly localized.
+Natural wording is not trusted blindly. PocketSignal validates the generated text and falls back to the local template if the output is unreliable or poorly localized.
 
 ### 5. Real low-literacy support
-Low-literacy mode now changes the wording itself instead of only truncating text.
 For clarity and consistency, this mode prioritizes the simplest deterministic local wording rather than free-form generation.
 Example low-literacy wording:
 - English: `We saw an unusual payment. Did you make it? Reply YES or NO.`
@@ -97,7 +93,6 @@ Example low-literacy wording:
 
 ## Repository structure
 
-- `src/payung/`: PocketSignal's internal Python package name. It remains `payung` for model-bundle compatibility, but the public product name is PocketSignal.
 - `config.yaml`: centralized data, model, routing, and LLM configuration
 - `src/payung/preprocess.py`: data merge + engineered features + feature store
 - `src/payung/modeling.py`: training, calibration, threshold optimization, evaluation
@@ -107,7 +102,6 @@ Example low-literacy wording:
 - `apps/dashboard.py`: judge-facing dashboard with exact demo path and customer recovery panel
 - `scripts/`: training, ablation, demo-case generation, latency testing, and sample prediction helpers
 - `reports/`: generated metrics, ablation, latency, and demo-case artifacts
-- `docs/`: business, ethics, and case-study alignment notes
 
 ## Included reproducibility artifacts
 
@@ -118,8 +112,6 @@ This public repo includes the files needed to run the prototype without retraini
 - `reports/latency_judge_demo.md`
 - `reports/latency_fast_route.md`
 - `reports/latency_submission_summary.md`
-
-The raw Kaggle CSV files are intentionally **not** redistributed here.
 
 ## Quick start
 
@@ -174,7 +166,7 @@ python3 scripts/run_ablation.py --sample-frac 0.05
 ollama pull llama3
 ```
 
-Before recording or demoing, check the exact local model tag:
+Check the exact local model tag:
 ```bash
 ollama list
 ```
@@ -183,10 +175,6 @@ If your machine does not have a model named exactly `llama3`, set the backend mo
 ```bash
 POCKETSIGNAL_OLLAMA_MODEL=llama3.1:8b
 ```
-
-Lighter local natural-wording benchmarks for future work:
-- `ollama pull llama3.2:1b`
-- `ollama pull qwen2.5:1.5b`
 
 ### 6. Start the FastAPI backend
 
@@ -234,55 +222,3 @@ python3 scripts/find_demo_cases.py --sample-frac 0.02
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile judge_demo --output reports/latency_judge_demo.md
 python3 scripts/load_test.py --scenario mixed_exact --requests 60 --concurrency 3 --timeout 10 --response-profile fast_route --output reports/latency_fast_route.md
 ```
-
-## Demo path used in judging
-
-For the live demo, use the exact saved cases in this order:
-1. `Approve`
-2. `Flag`
-3. `Block`
-
-For the `Flag` case, the dashboard now supports an explicit user-response loop:
-- user confirms
-- or user denies and triggers a blocked / manual-review outcome
-
-That makes the recovery flow visible instead of leaving it as a static message bubble.
-
-## API contract
-
-`POST /predict`
-- input: transaction feature JSON (`TransactionAmt`, `card1`, `DeviceInfo`, ...)
-- optional fields:
-  - `preferred_language`: `English | Bahasa Melayu`
-  - `response_profile`: natural local wording (`judge_demo`) or fast local wording (`fast_route`)
-  - `low_literacy`: `true | false`
-- output:
-  - `status`: `Approve | Flag | Block`
-  - `risk_score`: integer `0-100`
-  - `probability`: calibrated fraud probability
-  - `top_features`: human-readable risk reasons
-  - `explanation`: local recovery or route explanation
-  - `latency_ms`
-  - `model_version`
-
-`GET /health`
-- `model_loaded`
-- `ollama_ready`
-- `feature_store_ready`
-
-## Key evidence files
-
-- `reports/metrics_report.md`
-- `reports/metrics.json`
-- `reports/leakage_check.md`
-- `reports/ablation_report.md`
-- `reports/latency_judge_demo.md`
-- `reports/latency_fast_route.md`
-- `reports/latency_submission_summary.md`
-- `docs/case_study2_compliance.md`
-- `docs/privacy_and_ethics.md`
-- `docs/business/market_and_impact.md`
-
-## References
-
-See [references.md](references.md) for the external sources used in the public-facing documentation.
