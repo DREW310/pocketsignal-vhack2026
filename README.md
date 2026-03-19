@@ -11,8 +11,9 @@ Instead of returning only a fraud score, PocketSignal turns each transaction int
 The main idea is simple: **detect risk, choose the right intervention, and communicate it in a way the user can act on.**
 
 ## Product walkthrough
-
+Frontend Design:
 ![PocketSignal overview](docs/assets/overview.jpg)
+
 
 This overview shows the three calibrated routes. Only the gray-zone `Flag` route activates a recovery step.
 
