@@ -36,7 +36,7 @@ The `Flag` lane now supports a real closed loop: the user can confirm or deny th
 
 The `Block` lane is intentionally narrow so hard intervention is reserved for the highest-confidence fraud cases.
 
-## Architecture
+## Architecture Diagram
 
 ![PocketSignal architecture](docs/assets/architecture_revised.jpg)
 
