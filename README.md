@@ -10,16 +10,6 @@ Instead of returning only a fraud score, PocketSignal turns each transaction int
 
 The main idea is simple: **detect risk, choose the right intervention, and communicate it in a way the user can act on.**
 
-## Why this project matters
-
-PocketSignal is designed around a Malaysia-first pilot story.
-
-- PayNet reported in February 2026 that more than **2.9 million merchants in Malaysia** accept DuitNow QR.
-- The World Bank Global Findex 2021 microdata shows that **91.4% of Malaysian adults had an account**, so the next barrier is trusted usage, not only basic access.
-- Royal Malaysia Police scam alerts in January 2026 warned that scammers are already using **AI-generated voice deception** to pressure victims into urgent transfers.
-
-That combination makes Malaysia a logical place to pilot a trust-preserving fraud workflow before adapting the same product for broader ASEAN wallet use cases.
-
 ## Product walkthrough
 
 ![PocketSignal overview](docs/assets/overview.svg)
