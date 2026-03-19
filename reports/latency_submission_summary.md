@@ -29,9 +29,3 @@ Reading:
 Reading:
 - best for deployment-oriented latency discussion
 - all three routes stayed within roughly `100 ms` p95 in the current mixed exact-case local run
-
-## Judge-Safe Summary
-
-Use this exact wording in slides or speech:
-
-"PocketSignal supports two local recovery modes. The natural local wording mode gives better demo-quality user messaging but a slower gray-zone path. The fast local wording mode keeps all three routes close to real-time in our current mixed exact-case local benchmark, with no request errors in the run."
