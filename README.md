@@ -12,7 +12,7 @@ The main idea is simple: **detect risk, choose the right intervention, and commu
 
 ## 🔗 Quick Links
 - **🎥 Pitch Video:** [Watch on YouTube](https://youtu.be/s5sy7qVHHM8)
-- **📊 Slide Deck:** [View on Canva](https://www.canva.com/design/DAHEZT6cyHY/gLM1FCREfB62_GdVfvclrA/view)
+- **📊 Slide Deck:** [View on Canva](https://www.canva.com/design/DAHEfW5SIkk/mHgYozmA1weE_hT2cPCFDg/view?utm_content=DAHEfW5SIkk&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd9c75b98fb)
 
 ## Product walkthrough
 **Frontend Design:**
