@@ -65,24 +65,13 @@ Current calibrated route mix on the validation split:
 
 ## Key technical choices
 
-### 1. Behavioral profiling
-PocketSignal engineers leak-safe historical behavior features such as:
-- past transaction count
-- past average amount
-- time-derived patterns
+### 1. Behavioural profiling & Context-aware graph features
+PocketSignal engineers leak-safe historical behaviour features (past transaction count, average amount) and models relationships (`card1 -> DeviceInfo`, `card1 -> P_emaildomain`). This helps surface suspicious shared infrastructure and **handles the sparse data typical of unbanked users** without moving to a heavier graph-neural deployment stack.
 
-### 2. Context-aware graph features
-PocketSignal also models relationships such as:
-- `card1 -> DeviceInfo`
-- `card1 -> P_emaildomain`
+### 2. Calibrated triage instead of a raw score
+PocketSignal does not expose only a raw fraud probability. It calibrates the score, then maps it into a route that a wallet operator can actually act on.
 
-This helps surface suspicious shared infrastructure without moving to a heavier graph-neural deployment stack.
-
-### 3. Calibrated triage instead of a raw score
-PocketSignal does not expose only a raw fraud probability.
-It calibrates the score, then maps it into a route that a wallet operator can actually act on.
-
-### 4. Local recovery wording
+### 3. Local recovery wording & Low-literacy support
 Only `Flag` transactions trigger recovery wording.
 Two local modes are supported:
 - **Natural wording** (`response_profile=judge_demo`): uses Ollama when available for a more natural recovery message
@@ -90,11 +79,13 @@ Two local modes are supported:
 
 Natural wording is not trusted blindly. PocketSignal validates the generated text and falls back to the local template if the output is unreliable or poorly localized.
 
-### 5. Real low-literacy support
-For clarity and consistency, this mode prioritizes the simplest deterministic local wording rather than free-form generation.
+**Real low-literacy support:** For clarity and consistency, this mode prioritizes the simplest deterministic local wording rather than free-form generation.
 Example low-literacy wording:
 - English: `We saw an unusual payment. Did you make it? Reply YES or NO.`
 - Bahasa Melayu: `Kami nampak transaksi luar biasa. Adakah anda yang membuat transaksi ini? Balas YA atau TIDAK.`
+
+### 4. Business Model & Sustainability
+PocketSignal is designed as a **B2B2C infrastructure product** for wallet providers and super apps. To ensure long-term sustainability and combat concept drift, our architecture supports a **monthly retraining pipeline** to adapt to evolving scam tactics without massive compute costs.
 
 ## Repository structure
 
@@ -117,6 +108,8 @@ This public repo includes the files needed to run the prototype without retraini
 - `reports/latency_judge_demo.md`
 - `reports/latency_fast_route.md`
 - `reports/latency_submission_summary.md`
+
+_(Note: The raw IEEE-CIS Kaggle CSV files are intentionally not redistributed here. If you wish to run the preprocessing from scratch, please download them from Kaggle)_
 
 ## Quick start
 
