@@ -11,7 +11,7 @@ Instead of returning only a fraud score, PocketSignal turns each transaction int
 The main idea is simple: **detect risk, choose the right intervention, and communicate it in a way the user can act on.**
 
 ## 🔗 Quick Links
-- **🎥 Pitch Video:** [Watch on YouTube](Insert YouTube Link Here)
+- **🎥 Pitch Video:** [Watch on YouTube](https://youtu.be/s5sy7qVHHM8)
 - **📊 Slide Deck:** [View on Canva](https://www.canva.com/design/DAHEZT6cyHY/gLM1FCREfB62_GdVfvclrA/view)
 
 ## Product walkthrough
